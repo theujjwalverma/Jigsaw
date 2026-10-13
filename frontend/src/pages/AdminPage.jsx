@@ -291,8 +291,11 @@ export function AdminPage() {
       </div>
       <h1>Admin Dashboard</h1>
       <p className="subtitle">Set the pace, gather your players, and let the puzzling begin.</p>
-      <div className="clay-panel">
-      <h2>Host access</h2>
+
+      <div className="admin-grid-layout">
+        <div className="admin-column-main">
+          <div className="clay-panel">
+            <h2>Host access</h2>
       <input
         aria-label="Admin password"
         type="password"
@@ -468,25 +471,30 @@ export function AdminPage() {
         );
       })}
       </div>
-      </div>
+          </div>
+        </div>
 
-      <div className="clay-panel">
-      <h2>Players</h2>
-      <ul className="player-list">
-        {players.map((player) => (
-          <li key={player.id}>
-            {player.name} | {player.connected ? "online" : "offline"} | {player.status} | moves: {player.roundState?.moves ?? 0}
-            <button type="button" onClick={() => removePlayer(player.id)}>Remove</button>
-          </li>
-        ))}
-      </ul>
-      {players.length === 0 ? <p className="muted">Your crew will appear here when they join.</p> : null}
+        {/* Column 2: Players */}
+        <div className="admin-column-players">
+          <div className="clay-panel">
+            <h2>Players</h2>
+            <ul className="player-list">
+              {players.map((player) => (
+                <li key={player.id}>
+                  {player.name} | {player.connected ? "online" : "offline"} | {player.status} | moves: {player.roundState?.moves ?? 0}
+                  <button type="button" onClick={() => removePlayer(player.id)}>Remove</button>
+                </li>
+              ))}
+            </ul>
+            {players.length === 0 ? <p className="muted">Your crew will appear here when they join.</p> : null}
 
-      {activeEventId ? (
-        <p>
-          Export: <a href={`${API_BASE}/api/events/${activeEventId}/export-csv`} target="_blank" rel="noreferrer">Download CSV</a>
-        </p>
-      ) : null}
+            {activeEventId ? (
+              <p>
+                Export: <a href={`${API_BASE}/api/events/${activeEventId}/export-csv`} target="_blank" rel="noreferrer">Download CSV</a>
+              </p>
+            ) : null}
+          </div>
+        </div>
       </div>
     </section>
   );
