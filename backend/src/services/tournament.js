@@ -110,7 +110,8 @@ class TournamentService {
   }
 
   getEvent(eventId) {
-    return this.events.get(eventId);
+    if (!eventId) return null;
+    return this.events.get(eventId) || this.getEventByCode(eventId);
   }
 
   getEventByCode(rawCode) {

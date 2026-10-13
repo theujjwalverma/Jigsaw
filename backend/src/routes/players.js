@@ -8,12 +8,14 @@ router.post("/:eventId/join", (req, res) => {
   const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
   const payload = parseOrThrow(joinSchema, req.body || {});
 
-  const player = tournament.joinEvent(eventId, payload.name, null);
+  const event = tournament.ensureEvent(eventId);
+  const player = tournament.joinEvent(event.id, payload.name, null);
   res.status(201).json({
+    eventId: event.id,
     playerId: player.id,
     name: player.name,
     duplicateName: tournament
-      .listPlayers(eventId)
+      .listPlayers(event.id)
       .filter((p) => p.name.toLowerCase() === payload.name.toLowerCase()).length > 1,
   });
 });

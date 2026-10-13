@@ -61,6 +61,9 @@ export function LiveSpectatorPage() {
         if (isMounted) {
           setSpectatorData(data);
           setError("");
+          if (data.id && data.id !== eventId) {
+            socket.emit("event:watch", { eventId: data.id });
+          }
         }
       } catch (err) {
         if (isMounted) {

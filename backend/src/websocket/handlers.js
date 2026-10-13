@@ -4,12 +4,16 @@ function registerSocketHandlers(io) {
   io.on("connection", (socket) => {
     socket.on("event:watch", ({ eventId }) => {
       if (!eventId) return;
-      socket.join(eventId);
+      const event = tournament.getEvent(eventId);
+      const targetId = event ? event.id : eventId;
+      socket.join(targetId);
     });
 
     socket.on("event:unwatch", ({ eventId }) => {
       if (!eventId) return;
-      socket.leave(eventId);
+      const event = tournament.getEvent(eventId);
+      const targetId = event ? event.id : eventId;
+      socket.leave(targetId);
     });
 
     socket.on("game:join", ({ eventId, playerId }) => {

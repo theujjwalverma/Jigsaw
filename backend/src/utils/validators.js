@@ -1,7 +1,12 @@
 const { z } = require("zod");
 const { TOURNAMENT_ROUNDS, DEFAULT_ROUND_SECONDS, DEFAULT_LEADERBOARD_SECONDS } = require("./constants");
 
-const eventIdSchema = z.string().uuid();
+const uuidSchema = z.string().uuid();
+const eventIdSchema = z.union([
+  uuidSchema,
+  z.string().regex(/^\d{3}-\d{3}$/),
+  z.string().regex(/^\d{6}$/),
+]);
 
 const playerNameSchema = z
   .string()
@@ -35,7 +40,7 @@ const timerSettingsSchema = z.object({
 
 const pieceIdSchema = z.string().regex(/^r\d+c\d+$/).max(20);
 const submissionSchema = z.object({
-  playerId: eventIdSchema,
+  playerId: uuidSchema,
   roundNumber: z.number().int().min(1).max(5),
 });
 const placementSchema = submissionSchema.extend({

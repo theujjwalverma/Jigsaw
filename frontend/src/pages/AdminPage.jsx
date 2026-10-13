@@ -346,7 +346,7 @@ export function AdminPage() {
       <button type="button" onClick={advanceRound} disabled={!canAdvanceRound}>Advance Round</button>
       <button
         type="button"
-        onClick={() => window.open(`/live/${activeEventId}`, "_blank")}
+        onClick={() => window.open(`/live/${eventCode || activeEventId}`, "_blank")}
         disabled={!activeEventId}
         style={{
           background: "#ff3b5c",
@@ -367,14 +367,14 @@ export function AdminPage() {
           </p>
           <p style={{ margin: 0 }}>
             <strong>Join URL: </strong>
-            <code>{`${window.location.origin}/join/${activeEventId}`}</code>
+            <code>{`${window.location.origin}/join/${eventCode || activeEventId}`}</code>
           </p>
           <div style={{ margin: "10px 0 0", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <strong>Spectate Live: </strong>
-            <code>{`${window.location.origin}/live/${activeEventId}`}</code>
+            <code>{`${window.location.origin}/live/${eventCode || activeEventId}`}</code>
             <button
               type="button"
-              onClick={() => window.open(`/live/${activeEventId}`, "_blank")}
+              onClick={() => window.open(`/live/${eventCode || activeEventId}`, "_blank")}
               style={{
                 background: "#ff3b5c",
                 color: "#ffffff",

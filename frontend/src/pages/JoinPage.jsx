@@ -6,6 +6,7 @@ import { useGameStore } from "../services/gameState";
 export function JoinPage() {
   const { eventId } = useParams();
   const navigate = useNavigate();
+  const [resolvedEventId, setResolvedEventId] = useState(null);
   const [roomCode, setRoomCode] = useState("");
   const [name, setName] = useState("");
   const [error, setError] = useState("");
@@ -17,6 +18,7 @@ export function JoinPage() {
       api
         .get(`/events/${eventId}`)
         .then(({ data }) => {
+          setResolvedEventId(data.id);
           if (data.code) {
             const rawDigits = data.code.replace(/[^0-9]/g, "");
             if (rawDigits.length > 3) {
@@ -26,7 +28,18 @@ export function JoinPage() {
             }
           }
         })
-        .catch(() => {});
+        .catch(() => {
+          api
+            .get(`/events/lookup/${eventId}`)
+            .then(({ data }) => {
+              setResolvedEventId(data.id);
+              if (data.code) {
+                const rawDigits = data.code.replace(/[^0-9]/g, "");
+                setRoomCode(rawDigits.length > 3 ? `${rawDigits.slice(0, 3)} - ${rawDigits.slice(3)}` : data.code);
+              }
+            })
+            .catch(() => {});
+        });
     }
   }, [eventId]);
 
@@ -45,7 +58,7 @@ export function JoinPage() {
     setIsJoining(true);
     setError("");
     try {
-      let targetEventId = eventId;
+      let targetEventId = resolvedEventId || eventId;
       if (!targetEventId) {
         const cleanDigits = roomCode.replace(/[^0-9]/g, "");
         if (cleanDigits.length !== 6 && !roomCode.trim()) {
@@ -53,11 +66,13 @@ export function JoinPage() {
         }
         const lookupRes = await api.get(`/events/lookup/${cleanDigits || roomCode.trim()}`);
         targetEventId = lookupRes.data.id;
+        setResolvedEventId(targetEventId);
       }
 
       const { data } = await api.post(`/events/${targetEventId}/join`, { name });
-      setSession({ eventId: targetEventId, playerId: data.playerId, playerName: data.name });
-      navigate(`/lobby/${targetEventId}`);
+      const finalEventId = data.eventId || targetEventId;
+      setSession({ eventId: finalEventId, playerId: data.playerId, playerName: data.name });
+      navigate(`/lobby/${finalEventId}`);
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Unable to join room");
     } finally {

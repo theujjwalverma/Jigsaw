@@ -18,7 +18,7 @@ router.post("/", (req, res) => {
   res.status(201).json({
     id: event.id,
     code: event.code,
-    joinUrl: `/join/${event.id}`,
+    joinUrl: `/join/${event.code}`,
     roundSeconds: event.roundSeconds,
     roundSecondsByRound: event.roundSecondsByRound,
     leaderboardSeconds: event.leaderboardSeconds,
@@ -36,7 +36,7 @@ router.get("/lookup/:code", (req, res) => {
     code: event.code,
     status: event.status,
     currentRound: event.currentRound,
-    joinUrl: `/join/${event.id}`,
+    joinUrl: `/join/${event.code}`,
   });
 });
 
@@ -50,6 +50,7 @@ router.get("/:eventId", (req, res) => {
   return res.json({
     id: event.id,
     code: event.code,
+    joinUrl: `/join/${event.code}`,
     status: event.status,
     currentRound: event.currentRound,
     playerCount: event.players.size,
