@@ -357,6 +357,12 @@ export function AdminPage() {
             <strong>Join URL: </strong>
             <code>{`${window.location.origin}/join/${activeEventId}`}</code>
           </p>
+          <p style={{ margin: "8px 0 0" }}>
+            <strong>Spectate Live: </strong>
+            <a href={`/live/${activeEventId}`} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", color: "var(--accent, #6a4c93)", fontWeight: 600 }}>
+              {`${window.location.origin}/live/${activeEventId}`} 🔴
+            </a>
+          </p>
         </div>
       ) : (
         <p>Create an event to get a 6-digit room code and player join link</p>

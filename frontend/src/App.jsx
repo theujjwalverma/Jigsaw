@@ -5,6 +5,7 @@ import { GamePage } from "./pages/GamePage";
 import { JoinPage } from "./pages/JoinPage";
 import { LeaderboardPage } from "./pages/LeaderboardPage";
 import { LobbyPage } from "./pages/LobbyPage";
+import { LiveSpectatorPage } from "./pages/LiveSpectatorPage";
 import { useGameSocket } from "./hooks/useGameSocket";
 
 function App() {
@@ -27,6 +28,8 @@ function App() {
       <Route path="/" element={<JoinPage />} />
       <Route path="/login" element={<LoginPage />} />
       <Route path="/admin" element={<AdminPage />} />
+      <Route path="/live" element={<LiveSpectatorPage />} />
+      <Route path="/live/:eventId" element={<LiveSpectatorPage />} />
       <Route path="/join/:eventId" element={<JoinPage />} />
       <Route path="/lobby/:eventId" element={<LobbyPage />} />
       <Route path="/game/:eventId/:roundNumber" element={<GamePage />} />

@@ -406,6 +406,34 @@ class TournamentService {
   listPlayers(eventId) {
     return [...this.ensureEvent(eventId).players.values()];
   }
+
+  getSpectatorState(eventId) {
+    const event = this.ensureEvent(eventId);
+    const round = event.currentRound;
+    const puzzle = event.roundAssets[round] || null;
+    return {
+      id: event.id,
+      code: event.code,
+      status: event.status,
+      currentRound: round,
+      roundEndsAt: event.roundEndsAt,
+      puzzle,
+      players: [...event.players.values()].map((p) => {
+        const roundState = p.rounds[round] || null;
+        return {
+          id: p.id,
+          name: p.name,
+          connected: p.connected,
+          status: p.status,
+          moves: roundState?.moves || 0,
+          completed: roundState?.completed || false,
+          finishedAtMs: roundState?.finishedAtMs || null,
+          placements: roundState?.placements || {},
+          placedPieceIds: roundState?.placedPieceIds || [],
+        };
+      }),
+    };
+  }
 }
 
 module.exports = new TournamentService();

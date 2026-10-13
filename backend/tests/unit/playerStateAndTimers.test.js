@@ -384,7 +384,7 @@ describe("player state and timer settings", () => {
     const app = { get: vi.fn() };
     const response = invoke(gameRoutes, "/:eventId/place-piece", { params: { eventId: event.id }, body, app });
     expect(response.json).toHaveBeenCalledWith(expect.objectContaining({ completed: false, placements: { r0c1: "r0c0" } }));
-    expect(app.get).not.toHaveBeenCalled();
+    expect(app.get).toHaveBeenCalledWith("io");
     const returned = invoke(gameRoutes, "/:eventId/place-piece", {
       params: { eventId: event.id }, body: { ...body, cellId: null }, app,
     });
@@ -407,7 +407,7 @@ describe("player state and timer settings", () => {
       app,
     });
     expect(placement.json).toHaveBeenCalledWith(expect.objectContaining({ completed: false, moves: 4 }));
-    expect(emit).not.toHaveBeenCalled();
+    expect(emit).toHaveBeenCalledWith("spectator:placement", expect.any(Object));
     const response = invoke(gameRoutes, "/:eventId/submit-round", {
       params: { eventId: event.id }, body: { playerId: player.id, roundNumber: 1 }, app,
     });
@@ -456,7 +456,7 @@ describe("player state and timer settings", () => {
     });
     expect(response.json).toHaveBeenCalledWith(expect.objectContaining({ completed: true, wrongPieceCount: 0 }));
     expect(event.status).toBe("in_round");
-    expect(app.get).not.toHaveBeenCalled();
+    expect(app.get).toHaveBeenCalledWith("io");
   });
 
   it("publishes the final tournament results after the final round is submitted", () => {

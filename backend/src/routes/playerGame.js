@@ -75,6 +75,20 @@ router.post("/:eventId/place-piece", (req, res) => {
   const payload = parseOrThrow(placementSchema, req.body || {});
 
   const result = tournament.placePiece({ eventId, ...payload });
+
+  try {
+    req.app.get("io").to(eventId).emit("spectator:placement", {
+      playerId: payload.playerId,
+      roundNumber: payload.roundNumber,
+      placements: result.placements,
+      moves: result.moves,
+      placedPieceIds: result.placedPieceIds,
+      completed: result.completed,
+    });
+  } catch {
+    // no-op
+  }
+
   return res.json(result);
 });
 
@@ -87,6 +101,17 @@ router.post("/:eventId/submit-round", (req, res) => {
       ...result,
       error: `${result.wrongPieceCount} ${result.wrongPieceCount === 1 ? "piece is" : "pieces are"} wrongly placed. Rearrange them and submit again.`,
     });
+  }
+
+  try {
+    req.app.get("io").to(eventId).emit("spectator:player-finished", {
+      playerId: payload.playerId,
+      roundNumber: payload.roundNumber,
+      moves: result.moves,
+      finishedAtMs: Date.now(),
+    });
+  } catch {
+    // no-op
   }
 
   if (tournament.allPlayersFinished(eventId)) {

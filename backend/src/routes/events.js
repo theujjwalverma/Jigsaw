@@ -60,4 +60,10 @@ router.get("/:eventId", (req, res) => {
   });
 });
 
+router.get("/:eventId/spectator", (req, res) => {
+  const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
+  const state = tournament.getSpectatorState(eventId);
+  return res.json(state);
+});
+
 module.exports = router;
