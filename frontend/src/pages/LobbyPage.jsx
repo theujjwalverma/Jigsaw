@@ -17,13 +17,14 @@ export function LobbyPage() {
   const connectionError = useGameStore((s) => s.connectionError);
 
   useEffect(() => {
-    if (!playerId || sessionEventId !== eventId) navigate(`/join/${eventId}`, { replace: true });
-    else if (status === "in_round" && puzzle) {
+    if (!playerId) {
+      navigate(`/join/${eventId}`, { replace: true });
+    } else if (status === "in_round" && puzzle) {
       navigate(`/game/${eventId}/${currentRound}`);
     } else if (status === "between_rounds" || status === "finished") {
       navigate(`/leaderboard/${eventId}/${currentRound}`);
     }
-  }, [status, puzzle, currentRound, eventId, playerId, sessionEventId, navigate]);
+  }, [status, puzzle, currentRound, eventId, playerId, navigate]);
 
   useEffect(() => {
     api

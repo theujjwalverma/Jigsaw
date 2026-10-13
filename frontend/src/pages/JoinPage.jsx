@@ -70,9 +70,9 @@ export function JoinPage() {
       }
 
       const { data } = await api.post(`/events/${targetEventId}/join`, { name });
-      const finalEventId = data.eventId || targetEventId;
-      setSession({ eventId: finalEventId, playerId: data.playerId, playerName: data.name });
-      navigate(`/lobby/${finalEventId}`);
+      const roomIdentifier = data.code || (roomCode ? roomCode.replace(/\s+/g, "") : null) || data.eventId || targetEventId;
+      setSession({ eventId: roomIdentifier, playerId: data.playerId, playerName: data.name });
+      navigate(`/lobby/${roomIdentifier}`);
     } catch (err) {
       setError(err.response?.data?.error || err.message || "Unable to join room");
     } finally {

@@ -5,29 +5,39 @@ function registerSocketHandlers(io) {
     socket.on("event:watch", ({ eventId }) => {
       if (!eventId) return;
       const event = tournament.getEvent(eventId);
-      const targetId = event ? event.id : eventId;
-      socket.join(targetId);
+      if (event) {
+        socket.join(event.id);
+        if (event.code) socket.join(event.code);
+      } else {
+        socket.join(eventId);
+      }
     });
 
     socket.on("event:unwatch", ({ eventId }) => {
       if (!eventId) return;
       const event = tournament.getEvent(eventId);
-      const targetId = event ? event.id : eventId;
-      socket.leave(targetId);
+      if (event) {
+        socket.leave(event.id);
+        if (event.code) socket.leave(event.code);
+      } else {
+        socket.leave(eventId);
+      }
     });
 
     socket.on("game:join", ({ eventId, playerId }) => {
-      if (!tournament.getEvent(eventId)) {
+      const event = tournament.getEvent(eventId);
+      if (!event) {
         socket.emit("game:error", { message: "Event not found. Please join an existing event." });
         return;
       }
-      const found = tournament.reconnect(eventId, playerId, socket.id);
+      const found = tournament.reconnect(event.id, playerId, socket.id);
       if (!found) {
         socket.emit("game:error", { message: "Unable to rejoin event" });
         return;
       }
 
-      socket.join(eventId);
+      socket.join(found.event.id);
+      if (found.event.code) socket.join(found.event.code);
       socket.emit("game:player-reconnected", {
         playerId,
         currentRound: found.event.currentRound,
@@ -36,7 +46,7 @@ function registerSocketHandlers(io) {
         roundState: found.player.rounds[found.event.currentRound] || null,
       });
 
-      io.to(eventId).emit("game:player-joined", {
+      io.to(found.event.id).emit("game:player-joined", {
         playerId,
         name: found.player.name,
       });

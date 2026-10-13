@@ -38,14 +38,14 @@ export function GamePage() {
     error.round === currentRound ? error.message : "";
 
   useEffect(() => {
-    if (!playerId || eventId !== routeEventId) {
+    if (!playerId) {
       navigate(`/join/${routeEventId}`, { replace: true });
     } else if (eventStatus === "lobby") {
-      navigate(`/lobby/${eventId}`, { replace: true });
+      navigate(`/lobby/${routeEventId || eventId}`, { replace: true });
     } else if (eventStatus === "between_rounds" || eventStatus === "finished" || leaderboard.length) {
-      navigate(`/leaderboard/${eventId}/${currentRound || roundNumber}`);
+      navigate(`/leaderboard/${routeEventId || eventId}/${currentRound || roundNumber}`);
     } else if (currentRound && currentRound !== Number(roundNumber)) {
-      navigate(`/game/${eventId}/${currentRound}`, { replace: true });
+      navigate(`/game/${routeEventId || eventId}/${currentRound}`, { replace: true });
     }
   }, [leaderboard, navigate, eventId, currentRound, roundNumber, eventStatus, playerId, routeEventId]);
 

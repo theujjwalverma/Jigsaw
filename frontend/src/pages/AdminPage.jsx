@@ -35,7 +35,7 @@ export function AdminPage() {
     activeEventRef.current = id;
     timerEventRef.current = "";
     setActiveEventId(id);
-    setEventIdInput(id);
+    setEventIdInput(code || id);
     setEventCode(code);
     setUploadMessages({});
     setUploadedRounds([]);
@@ -86,15 +86,15 @@ export function AdminPage() {
   const activateEvent = async () => {
     const nextId = eventIdInput.trim();
     if (!nextId) {
-      setMessage("Enter an event ID to control");
+      setMessage("Enter a room code or event ID to control");
       return;
     }
 
     try {
-      await api.get(`/events/${nextId}`);
-      selectEvent(nextId);
-      setMessage(`Event opened: ${nextId}`);
-      await refreshState(nextId);
+      const { data } = await api.get(`/events/${nextId}`);
+      selectEvent(data.id, data.code || "");
+      setMessage(`Event opened: ${data.code || data.id}`);
+      await refreshState(data.id);
     } catch (error) {
       setMessage(`Open event failed: ${extractError(error)}`);
     }
@@ -334,10 +334,10 @@ export function AdminPage() {
       <h2>Event</h2>
       <button type="button" onClick={createEvent} disabled={!isAuthed}>Create Event</button>
       <input
-        aria-label="Event ID"
+        aria-label="Room Code or Event ID"
         value={eventIdInput}
         onChange={(e) => setEventIdInput(e.target.value)}
-        placeholder="Event ID"
+        placeholder="Room Code (e.g. 234-234)"
       />
       <button type="button" onClick={activateEvent} disabled={!eventIdInput.trim()}>Open Event</button>
       <button type="button" onClick={() => refreshState(activeEventId)} disabled={!activeEventId}>Refresh</button>
@@ -394,7 +394,7 @@ export function AdminPage() {
       ) : (
         <p>Create an event to get a 6-digit room code and player join link</p>
       )}
-      <p>Controlling event: {activeEventId || "none"}</p>
+      <p>Controlling event: <strong>{eventCode || activeEventId || "none"}</strong></p>
       <p>Status: {eventStatus} | Current round: {activeRound || "-"}</p>
       <p>
         Setup: Round 1 image {hasRoundOneImage ? "uploaded" : "missing"} | All 5 rounds {hasAllRoundImages ? "ready" : "incomplete"}
