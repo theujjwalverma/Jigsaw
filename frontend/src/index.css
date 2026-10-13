@@ -725,6 +725,230 @@ label {
   }
 }
 
+.tooltip-wrapper {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+}
+
+.refresh-room-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 11px;
+  border: 1.5px solid var(--line, #e2d9f3);
+  background: #ffffff;
+  color: #6a4c93;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 0;
+  box-shadow: 0 2px 6px rgba(106, 76, 147, 0.12);
+}
+
+.refresh-room-btn:hover {
+  background: var(--lavender, #e5dcfa);
+  color: #4a2870;
+  transform: rotate(90deg);
+}
+
+.tooltip-wrapper .tooltip-text {
+  visibility: hidden;
+  opacity: 0;
+  position: absolute;
+  bottom: calc(100% + 8px);
+  left: 50%;
+  transform: translateX(-50%);
+  background: #2d1f47;
+  color: #ffffff;
+  font-size: 0.75rem;
+  font-weight: 700;
+  white-space: nowrap;
+  padding: 5px 10px;
+  border-radius: 8px;
+  pointer-events: none;
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+  z-index: 100;
+}
+
+.tooltip-wrapper .tooltip-text::after {
+  content: "";
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  margin-left: -5px;
+  border-width: 5px;
+  border-style: solid;
+  border-color: #2d1f47 transparent transparent transparent;
+}
+
+.tooltip-wrapper:hover .tooltip-text {
+  visibility: visible;
+  opacity: 1;
+  transform: translateX(-50%) translateY(-2px);
+}
+
+.modal-backdrop {
+  position: fixed;
+  inset: 0;
+  background: rgba(30, 20, 50, 0.45);
+  backdrop-filter: blur(4px);
+  display: grid;
+  place-items: center;
+  z-index: 1000;
+  animation: fadeIn 0.15s ease-out;
+}
+
+.modal-card {
+  background: #ffffff;
+  border-radius: 24px;
+  padding: 28px 32px;
+  max-width: 440px;
+  width: 90%;
+  box-shadow: 0 20px 40px rgba(74, 45, 114, 0.25);
+  border: 2px solid var(--line, #e2d9f3);
+  text-align: center;
+  animation: popIn 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes popIn {
+  from { transform: scale(0.92); opacity: 0; }
+  to { transform: scale(1); opacity: 1; }
+}
+
+/* Admin Accordion Panels */
+.accordion-panel {
+  padding: 0 !important;
+  overflow: hidden;
+  transition: all 0.25s ease;
+}
+
+.accordion-header {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  user-select: none;
+  transition: background 0.15s ease;
+}
+
+.accordion-header:hover {
+  background: rgba(106, 76, 147, 0.04);
+}
+
+.accordion-title-wrap {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.accordion-icon {
+  font-size: 1.3rem;
+  line-height: 1;
+}
+
+.accordion-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: #2d1f47;
+}
+
+.accordion-chevron {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: 10px;
+  background: var(--lavender, #e5dcfa);
+  color: #6a4c93;
+  transition: transform 0.25s ease;
+}
+
+.accordion-chevron.open {
+  transform: rotate(180deg);
+}
+
+.accordion-body {
+  padding: 0 24px 24px 24px;
+  border-top: 1px solid var(--line, #eee6ff);
+  margin-top: 4px;
+  padding-top: 18px;
+  animation: fadeIn 0.2s ease-out;
+}
+
+/* Admin Metric Tiles */
+.admin-tiles-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 14px;
+  margin: 18px 0;
+}
+
+@media (max-width: 768px) {
+  .admin-tiles-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+.admin-tile {
+  background: #f7f2fd;
+  border: 1.5px solid var(--line, #e6dcf7);
+  border-radius: 18px;
+  padding: 16px 18px;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(106, 76, 147, 0.05);
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+}
+
+.admin-tile:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(106, 76, 147, 0.1);
+}
+
+.admin-tile-label {
+  font-size: 0.76rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted, #6a5a80);
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.admin-tile-value {
+  font-size: 1.25rem;
+  font-weight: 800;
+  color: #2d1f47;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.admin-tile-detail {
+  font-size: 0.82rem;
+  color: var(--muted, #706080);
+  margin-top: 2px;
+  line-height: 1.35;
+}
+
 .admin-page .settings-form {
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));

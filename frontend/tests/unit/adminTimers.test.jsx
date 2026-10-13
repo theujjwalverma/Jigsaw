@@ -37,9 +37,9 @@ afterEach(() => {
 
 function render(overrides = {}) {
   const values = {
-    activeEventId: "event", eventIdInput: "event", password: "", message: "",
+    activeEventId: "event", eventIdInput: "event", eventCode: "", password: "", message: "",
     roundSecondsByRound: times, leaderboardSeconds: 10, players: [], eventStatus: "lobby",
-    uploadedRounds: [1, 2], activeRound: 0, isAuthed: true, uploadMessages: {}, ...overrides,
+    uploadedRounds: [1, 2], activeRound: 0, isAuthed: true, uploadMessages: {}, copiedJoinUrl: false, showResetConfirm: false, isTimersOpen: false, ...overrides,
   };
   setters = {};
   refs = [];
