@@ -1,3 +1,5 @@
+const path = require("node:path");
+const fs = require("node:fs");
 const cookieParser = require("cookie-parser");
 const cors = require("cors");
 const express = require("express");
@@ -43,6 +45,26 @@ function createApp() {
   app.use("/api/events", resultsRoutes);
   app.use("/api/events", requireAdmin, gameRoutes);
   app.use("/api/events", requireAdmin, adminRoutes);
+
+  const frontendDist = path.resolve(__dirname, "../../frontend/dist");
+  if (fs.existsSync(frontendDist)) {
+    app.use(express.static(frontendDist));
+    app.get("*", (req, res, next) => {
+      if (req.path.startsWith("/api") || req.path === "/health" || req.path.startsWith("/socket.io")) {
+        return next();
+      }
+      res.sendFile(path.join(frontendDist, "index.html"));
+    });
+  } else {
+    app.get("/", (req, res) => {
+      res.json({
+        service: "Jigsaw Tournament Backend API",
+        status: "online",
+        health: "/health",
+        message: "Backend is running. To access the game UI, open the frontend deployment or build frontend/dist."
+      });
+    });
+  }
 
   app.use(errorHandler);
 
