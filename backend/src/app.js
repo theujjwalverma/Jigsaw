@@ -46,14 +46,19 @@ function createApp() {
   app.use("/api/events", requireAdmin, gameRoutes);
   app.use("/api/events", requireAdmin, adminRoutes);
 
+  const publicDir = path.resolve(__dirname, "../public");
   const frontendDist = path.resolve(__dirname, "../../frontend/dist");
-  if (fs.existsSync(frontendDist)) {
-    app.use(express.static(frontendDist));
-    app.get("*", (req, res, next) => {
-      if (req.path.startsWith("/api") || req.path === "/health" || req.path.startsWith("/socket.io")) {
+  const staticDir = fs.existsSync(path.join(publicDir, "index.html"))
+    ? publicDir
+    : (fs.existsSync(path.join(frontendDist, "index.html")) ? frontendDist : null);
+
+  if (staticDir) {
+    app.use(express.static(staticDir));
+    app.use((req, res, next) => {
+      if (req.method !== "GET" || req.path.startsWith("/api") || req.path === "/health" || req.path.startsWith("/socket.io")) {
         return next();
       }
-      res.sendFile(path.join(frontendDist, "index.html"));
+      res.sendFile(path.join(staticDir, "index.html"));
     });
   } else {
     app.get("/", (req, res) => {
