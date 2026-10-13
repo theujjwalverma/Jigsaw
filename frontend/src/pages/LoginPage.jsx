@@ -45,14 +45,14 @@ export function LoginPage() {
 
   if (checkingSession) {
     return (
-      <section className="page login-page">
+      <section className="page login-page centered-card">
         <p className="muted">Verifying host session...</p>
       </section>
     );
   }
 
   return (
-    <section className="page login-page">
+    <section className="page login-page centered-card">
       <div className="clay-illustration" aria-hidden="true">
         <span />
         <span />
@@ -66,26 +66,24 @@ export function LoginPage() {
         Enter your admin password to create, manage, and run tournament rooms.
       </p>
 
-      <form onSubmit={handleLogin} className="login-form">
+      <form onSubmit={handleLogin} className="join-form login-form">
         <label htmlFor="admin-password">Admin Password</label>
-        <div className="login-input-wrapper">
-          <input
-            id="admin-password"
-            type="password"
-            value={password}
-            onChange={(e) => {
-              setPassword(e.target.value);
-              setError("");
-            }}
-            placeholder="Enter admin password"
-            autoFocus
-            required
-            autoComplete="current-password"
-          />
-          <button type="submit" disabled={isLoading || !password.trim()}>
-            {isLoading ? "Logging in..." : "Log In & Continue"}
-          </button>
-        </div>
+        <input
+          id="admin-password"
+          type="password"
+          value={password}
+          onChange={(e) => {
+            setPassword(e.target.value);
+            setError("");
+          }}
+          placeholder="Enter admin password"
+          autoFocus
+          required
+          autoComplete="current-password"
+        />
+        <button type="submit" disabled={isLoading || !password.trim()}>
+          {isLoading ? "Logging in..." : "Log In & Continue"}
+        </button>
       </form>
 
       {error ? (
@@ -94,8 +92,8 @@ export function LoginPage() {
         </p>
       ) : null}
 
-      <div className="login-footer">
-        <Link to="/" className="accent-link">
+      <div className="card-footer-action">
+        <Link to="/" className="create-room-btn">
           &larr; Back to Join Tournament
         </Link>
       </div>

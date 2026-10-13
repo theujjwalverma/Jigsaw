@@ -846,19 +846,35 @@ a {
   }
 }
 
-/* Home & Login Pages */
-.home-page,
-.login-page {
-  max-width: 680px;
+/* Centered Card Pages (Join, Login, Lobby) */
+.centered-card {
+  max-width: 580px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+  padding: 40px;
 }
 
-.home-top-bar {
+.code-input-field {
+  font-size: 1.25rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+}
+
+.card-footer-action {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
   display: flex;
-  justify-content: space-between;
+  flex-direction: column;
   align-items: center;
-  flex-wrap: wrap;
-  gap: 12px;
-  margin-bottom: 8px;
+  gap: 8px;
+}
+
+.card-footer-action p {
+  margin: 0;
+  font-size: 0.92rem;
 }
 
 .create-room-btn {
@@ -869,49 +885,62 @@ a {
   color: #463765;
   text-decoration: none;
   font-weight: 700;
-  padding: 8px 16px;
-  border-radius: 14px;
-  font-size: 0.92rem;
-  box-shadow: 2px 3px 6px #8a74b322;
+  padding: 10px 20px;
+  border-radius: 16px;
+  font-size: 0.95rem;
+  box-shadow: 4px 5px 9px #8a74b32b, inset 2px 2px 3px #ffffffaa;
   transition: transform 150ms ease, box-shadow 150ms ease;
 }
 
 .create-room-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 3px 5px 10px #8a74b333;
+  box-shadow: 4px 7px 12px #8a74b340;
 }
 
-.code-entry-form,
-.login-form {
-  margin: 24px 0 16px;
-  display: flex;
+/* Lobby Room Code Display */
+.lobby-room-code-badge {
+  display: inline-flex;
   flex-direction: column;
-  gap: 8px;
-}
-
-.code-input-wrapper,
-.login-input-wrapper {
-  display: flex;
-  flex-wrap: wrap;
   align-items: center;
-  gap: 12px;
+  justify-content: center;
+  background: #f4eefc;
+  border: 2px dashed #bba9dc;
+  border-radius: 20px;
+  padding: 12px 32px;
+  margin: 16px auto 20px;
+  box-shadow: inset 1px 1px 3px #ffffff, 2px 3px 8px #7a669614;
 }
 
-.room-code-input {
-  font-size: 1.4rem;
-  font-weight: 700;
-  letter-spacing: 2px;
-  text-align: center;
-  max-width: 240px;
-}
-
-.home-footer-card,
-.login-footer {
-  margin-top: 32px;
-  padding-top: 20px;
-  border-top: 1px solid var(--line);
-  font-size: 0.95rem;
+.lobby-room-code-badge .room-code-label {
+  font-size: 0.72rem;
+  font-weight: 800;
   color: var(--muted);
+  letter-spacing: 1.5px;
+  margin-bottom: 2px;
+}
+
+.lobby-room-code-badge .room-code-number {
+  font-size: 1.85rem;
+  color: #4a3478;
+  letter-spacing: 3px;
+  font-weight: 800;
+}
+
+.lobby-page.centered-card {
+  max-width: 620px;
+  margin-left: auto;
+  margin-right: auto;
+  text-align: center;
+}
+
+.lobby-page.centered-card .lobby-banner {
+  justify-content: center;
+  text-align: left;
+}
+
+.lobby-page.centered-card .panel-heading {
+  justify-content: center;
+  gap: 12px;
 }
 
 .accent-link {
