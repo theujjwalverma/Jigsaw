@@ -343,13 +343,15 @@ export function AdminPage() {
       <div className="clay-panel">
       <h2>Event</h2>
       <button type="button" onClick={createEvent} disabled={!isAuthed}>Create Event</button>
-      <input
-        aria-label="Room Code or Event ID"
-        value={eventIdInput}
-        onChange={(e) => setEventIdInput(e.target.value)}
-        placeholder="Room Code (e.g. 234-234)"
-      />
-      <button type="button" onClick={activateEvent} disabled={!eventIdInput.trim()}>Open Event</button>
+      <div style={{ display: "none" }}>
+        <input
+          aria-label="Room Code or Event ID"
+          value={eventIdInput}
+          onChange={(e) => setEventIdInput(e.target.value)}
+          placeholder="Room Code (e.g. 234-234)"
+        />
+        <button type="button" onClick={activateEvent} disabled={!eventIdInput.trim()}>Open Event</button>
+      </div>
       <button type="button" onClick={() => refreshState(activeEventId)} disabled={!activeEventId}>Refresh</button>
       <button type="button" onClick={startGame} disabled={!canStartRoundOne}>Start Round 1</button>
       <button type="button" onClick={endRound} disabled={!canControlRounds || eventStatus !== "in_round"}>End Round Now</button>
