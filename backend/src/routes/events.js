@@ -58,7 +58,32 @@ router.get("/:eventId", (req, res) => {
     roundSecondsByRound: event.roundSecondsByRound,
     leaderboardSeconds: event.leaderboardSeconds,
     uploadedRounds: Object.keys(event.roundAssets).map((value) => Number(value)),
+    roundGrids: event.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
   });
+});
+
+router.get("/:eventId/rounds/:round/image", (req, res) => {
+  const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
+  const round = Number(req.params.round);
+  const event = tournament.getEvent(eventId);
+  if (!event || !event.roundAssets || !event.roundAssets[round]) {
+    return res.status(404).json({ error: "Image not found" });
+  }
+  const dataUrl = event.roundAssets[round].imageUrl;
+  if (!dataUrl) {
+    return res.status(404).json({ error: "Image not found" });
+  }
+  if (dataUrl.startsWith("data:")) {
+    const matches = dataUrl.match(/^data:([^;]+);base64,(.+)$/);
+    if (matches && matches.length === 3) {
+      const mime = matches[1];
+      const buffer = Buffer.from(matches[2], "base64");
+      res.setHeader("Content-Type", mime);
+      res.setHeader("Cache-Control", "public, max-age=86400");
+      return res.send(buffer);
+    }
+  }
+  return res.redirect(dataUrl);
 });
 
 router.get("/:eventId/spectator", (req, res) => {

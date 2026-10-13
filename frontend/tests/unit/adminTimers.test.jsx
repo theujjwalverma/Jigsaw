@@ -39,7 +39,10 @@ function render(overrides = {}) {
   const values = {
     activeEventId: "event", eventIdInput: "event", eventCode: "", password: "", message: "",
     roundSecondsByRound: times, leaderboardSeconds: 10, players: [], eventStatus: "lobby",
-    uploadedRounds: [1, 2], activeRound: 0, isAuthed: true, uploadMessages: {}, copiedJoinUrl: false, showResetConfirm: false, isTimersOpen: false, ...overrides,
+    uploadedRounds: [1, 2], activeRound: 0, isAuthed: true, uploadMessages: {}, copiedJoinUrl: false, showResetConfirm: false, isTimersOpen: false,
+    roundGrids: { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
+    previewUrls: {},
+    ...overrides,
   };
   setters = {};
   refs = [];
@@ -65,6 +68,10 @@ function button(page, label) {
 
 function input(page, id) {
   return findElement(page, (node) => node.type === "input" && (node.props.id === id || node.props["aria-label"] === id));
+}
+
+function select(page, label) {
+  return findElement(page, (node) => node.type === "select" && (node.props.id === label || node.props["aria-label"] === label));
 }
 
 it("edits one round without altering other durations", () => {
@@ -279,4 +286,33 @@ it("reports failed event opening and renders error and final-round states", asyn
   api.get.mockRejectedValue(new Error("offline"));
   await button(page, "Open Event").props.onClick();
   expect(setters.message).toHaveBeenCalledWith("Open event failed: offline");
+});
+
+it("allows selecting pieces / grid size for each round and passes grid on upload", async () => {
+  const page = render();
+  const round1Select = select(page, "Round 1 pieces");
+  expect(round1Select.props.value).toBe(2);
+  await round1Select.props.onChange({ target: { value: "4" } });
+  const update = setters.roundGrids.mock.calls[0][0];
+  expect(update({ 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 })).toEqual({ 1: 4, 2: 3, 3: 4, 4: 5, 5: 6 });
+  expect(api.patch).toHaveBeenCalledWith("/events/event/rounds/1/grid", { grid: 4 });
+
+  const pageWithGrid4 = render({ roundGrids: { 1: 4, 2: 3, 3: 4, 4: 5, 5: 6 } });
+  await input(pageWithGrid4, "Round 1 image").props.onChange({
+    target: { files: [new Blob(["image"])], value: "test.png" },
+  });
+  expect(api.post).toHaveBeenCalledWith(
+    "/events/event/upload/1",
+    expect.any(FormData),
+  );
+  const formData = api.post.mock.calls.find(([path]) => path === "/events/event/upload/1")[1];
+  expect(formData.get("grid")).toBe("4");
+});
+
+it("renders image preview when a round is uploaded", () => {
+  const page = render({ uploadedRounds: [1], previewUrls: { 1: "blob:http://localhost/test" } });
+  const previewImg = findElement(page, (node) => node.type === "img" && node.props.alt === "Round 1 preview");
+  expect(previewImg).toBeDefined();
+  expect(previewImg.props.src).toBe("blob:http://localhost/test");
+  expect(previewImg.props.className).toBe("round-image-preview");
 });

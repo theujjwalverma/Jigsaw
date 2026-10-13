@@ -52,6 +52,7 @@ class TournamentService {
         code: snapshot.code || generateRoomCode(),
         roundSeconds: roundSecondsByRound[0],
         roundSecondsByRound,
+        roundGrids: snapshot.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
         status: normalizedStatus,
         players,
         timer: null,
@@ -68,6 +69,7 @@ class TournamentService {
       createdAt: event.createdAt,
       roundSeconds: event.roundSeconds,
       roundSecondsByRound: event.roundSecondsByRound,
+      roundGrids: event.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
       leaderboardSeconds: event.leaderboardSeconds,
       status: event.status,
       currentRound: event.currentRound,
@@ -94,6 +96,7 @@ class TournamentService {
       createdAt: new Date().toISOString(),
       roundSeconds: roundSecondsByRound[0],
       roundSecondsByRound,
+      roundGrids: { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
       leaderboardSeconds: settings.leaderboardSeconds,
       status: "lobby",
       currentRound: 0,
@@ -170,14 +173,36 @@ class TournamentService {
     return event;
   }
 
-  setRoundImage(eventId, round, imageUrl) {
+  setRoundImage(eventId, round, imageUrl, customGrid) {
     const event = this.ensureEvent(eventId);
+    if (!event.roundGrids) {
+      event.roundGrids = { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 };
+    }
+    const grid = Number(customGrid) || event.roundGrids[round] || ROUND_CONFIG[round - 1].grid;
+    event.roundGrids[round] = grid;
     event.roundAssets[round] = createPuzzleConfig({
       imageUrl,
-      grid: ROUND_CONFIG[round - 1].grid,
+      grid,
     });
     this.persist(event);
     return event.roundAssets[round];
+  }
+
+  setRoundGrid(eventId, round, grid) {
+    const event = this.ensureEvent(eventId);
+    if (!event.roundGrids) {
+      event.roundGrids = { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 };
+    }
+    const parsedGrid = Number(grid);
+    event.roundGrids[round] = parsedGrid;
+    if (event.roundAssets[round]?.imageUrl) {
+      event.roundAssets[round] = createPuzzleConfig({
+        imageUrl: event.roundAssets[round].imageUrl,
+        grid: parsedGrid,
+      });
+    }
+    this.persist(event);
+    return event.roundGrids;
   }
 
   joinEvent(eventId, name, socketId) {

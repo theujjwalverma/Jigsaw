@@ -1004,6 +1004,93 @@ label {
   font-size: 0.8rem;
 }
 
+.clay-select {
+  appearance: none;
+  -webkit-appearance: none;
+  font-family: inherit;
+  font-size: 0.84rem;
+  font-weight: 700;
+  color: #463765;
+  background-color: #f7f3fd;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%2369637c' stroke-width='2.5' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  padding: 5px 28px 5px 12px;
+  border-radius: 12px;
+  border: 1px solid #e2dbec;
+  box-shadow: 2px 3px 6px #72658214, -2px -2px 5px #ffffff,
+    inset 1px 1px 2px #ffffffaa, inset -1px -1px 2px #78668e14;
+  cursor: pointer;
+  transition: transform 140ms ease, box-shadow 140ms ease, border-color 140ms ease;
+}
+
+.clay-select:hover:not(:disabled) {
+  transform: translateY(-1px);
+  box-shadow: 3px 5px 9px #7265821e, -2px -2px 6px #ffffff,
+    inset 1px 1px 2px #ffffff;
+}
+
+.clay-select:focus-visible {
+  outline: none;
+  border-color: #9880c5;
+  box-shadow: 0 0 0 3px #e5dcfa, 2px 3px 6px #72658214;
+}
+
+.clay-select:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none;
+}
+
+.clay-select option {
+  background: #ffffff;
+  color: var(--ink);
+  font-weight: 600;
+  padding: 6px;
+}
+
+.round-image-preview-wrap {
+  width: 100%;
+  height: 140px;
+  margin: 10px 0 12px;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #ede8f5;
+  box-shadow: inset 2px 2px 5px rgba(114, 101, 130, 0.15), inset -2px -2px 5px #ffffff;
+  border: 1px solid #e4ddeb;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+
+.round-image-preview {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+  transition: transform 220ms ease;
+}
+
+.round-image-preview-wrap:hover .round-image-preview {
+  transform: scale(1.04);
+}
+
+.round-preview-badge {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(40, 92, 75, 0.88);
+  color: #fff;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 3px 8px;
+  border-radius: 8px;
+  backdrop-filter: blur(4px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.18);
+  pointer-events: none;
+}
+
 input::file-selector-button {
   border: 0;
   border-radius: 8px;

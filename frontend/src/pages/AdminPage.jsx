@@ -30,6 +30,8 @@ export function AdminPage() {
   const [copiedJoinUrl, setCopiedJoinUrl] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isTimersOpen, setIsTimersOpen] = useState(false);
+  const [roundGrids, setRoundGrids] = useState(() => ({ 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 }));
+  const [previewUrls, setPreviewUrls] = useState({});
   const activeEventRef = useRef(activeEventId);
   const timerEventRef = useRef("");
 
@@ -56,6 +58,7 @@ export function AdminPage() {
     setEventCode(code);
     setUploadMessages({});
     setUploadedRounds([]);
+    setPreviewUrls({});
     setActiveRound(0);
     setPlayers([]);
     setEventStatus("loading");
@@ -204,6 +207,9 @@ export function AdminPage() {
           ROUND_CONFIG.map(() => eventRes.data.roundSeconds));
         setLeaderboardSeconds(eventRes.data.leaderboardSeconds);
       }
+      if (eventRes.data.roundGrids) {
+        setRoundGrids(eventRes.data.roundGrids);
+      }
     } catch (error) {
       setMessage(`Refresh failed: ${extractError(error)}`);
     }
@@ -218,10 +224,15 @@ export function AdminPage() {
     const requestedEventId = activeEventId;
     const form = new FormData();
     form.append("image", file);
+    form.append("grid", String(roundGrids[round] || ROUND_CONFIG[round - 1].grid));
     setUploadMessages((current) => ({ ...current, [round]: "Uploading..." }));
     try {
       await api.post(`/events/${requestedEventId}/upload/${round}`, form);
       if (activeEventRef.current !== requestedEventId) return;
+      const localUrl = typeof URL !== "undefined" && typeof URL.createObjectURL === "function"
+        ? URL.createObjectURL(file)
+        : `${API_BASE || ""}/api/events/${requestedEventId}/rounds/${round}/image`;
+      setPreviewUrls((current) => ({ ...current, [round]: localUrl }));
       setUploadMessages((current) => ({ ...current, [round]: "Upload complete" }));
       setUploadedRounds((current) => [...new Set([...current, round])]);
       setMessage(`Uploaded image for round ${round}`);
@@ -301,7 +312,7 @@ export function AdminPage() {
     <section className="page admin-page">
       <div className="admin-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
         <p className="eyebrow" style={{ margin: 0 }}>BEHIND THE PLAYGROUND</p>
-        <Link to="/" className="accent-link" style={{ fontWeight: "600" }}>&larr; Back to Home</Link>
+        <a href="/" className="accent-link" style={{ fontWeight: "600" }}>&larr; Back to Home</a>
       </div>
       <h1>Admin Dashboard</h1>
       <p className="subtitle">Set the pace, gather your players, and let the puzzling begin.</p>
@@ -448,17 +459,68 @@ export function AdminPage() {
             ) : null}
           </div>
 
-          {/* 2. Round Images Card */}
+          {/* 2. Round Settings Card */}
           <div className="clay-panel">
-            <h2>Round Images</h2>
+            <h2>Round Settings</h2>
             <p className="muted">Selecting a file is not confirmation of upload. Wait for "Upload complete" and the round to show "uploaded".</p>
             <p id="image-guidance" className="muted">Aim for about 300 pixels per piece. Landscape and portrait images keep their original proportions; square sizes below are recommendations, not requirements. PNG, JPEG or WebP; up to 5 MB per image. JPEG or WebP works well for large photos.</p>
             <div className="upload-grid">
-              {ROUND_CONFIG.map(({ round, grid, recommendedSize }) => {
+              {ROUND_CONFIG.map(({ round, grid }) => {
+                const currentGrid = roundGrids[round] || grid;
+                const recSize = currentGrid * 300;
+                const isUploaded = uploadedRounds.includes(round);
+                const previewSrc = previewUrls[round] || (isUploaded && activeEventId ? `${API_BASE || ""}/api/events/${activeEventId}/rounds/${round}/image` : null);
+
                 return (
                   <div key={round} className="upload-card">
-                    <span>Round {round} ({grid}x{grid}) {uploadedRounds.includes(round) ? "uploaded" : "missing"}</span>
-                    <p id={`round-${round}-image-size`} className="muted">Recommended square size: {recommendedSize} x {recommendedSize} px</p>
+                    <div className="round-card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                        <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Round {round}</span>
+                        <select
+                          className="clay-select"
+                          aria-label={`Round ${round} pieces`}
+                          value={currentGrid}
+                          onChange={async (e) => {
+                            const newGrid = Number(e.target.value);
+                            setRoundGrids((prev) => ({ ...prev, [round]: newGrid }));
+                            if (activeEventId && isAuthed) {
+                              try {
+                                await api.patch(`/events/${activeEventId}/rounds/${round}/grid`, { grid: newGrid });
+                              } catch {
+                                // non-blocking
+                              }
+                            }
+                          }}
+                        >
+                          <option value={2}>2x2 (4 pieces)</option>
+                          <option value={3}>3x3 (9 pieces)</option>
+                          <option value={4}>4x4 (16 pieces)</option>
+                          <option value={5}>5x5 (25 pieces)</option>
+                          <option value={6}>6x6 (36 pieces)</option>
+                          <option value={7}>7x7 (49 pieces)</option>
+                          <option value={8}>8x8 (64 pieces)</option>
+                        </select>
+                      </div>
+                      <span className={`badge ${isUploaded ? "badge-mint" : "badge-neutral"}`} style={{ fontSize: "0.75rem" }}>
+                        {isUploaded ? "uploaded" : "missing"}
+                      </span>
+                    </div>
+
+                    {previewSrc ? (
+                      <div className="round-image-preview-wrap">
+                        <img
+                          src={previewSrc}
+                          alt={`Round ${round} preview`}
+                          className="round-image-preview"
+                          onError={(e) => {
+                            e.currentTarget.style.display = "none";
+                          }}
+                        />
+                        <span className="round-preview-badge">✓ Preview</span>
+                      </div>
+                    ) : null}
+
+                    <p id={`round-${round}-image-size`} className="muted">Recommended square size: {recSize} x {recSize} px</p>
                     <input
                       type="file"
                       accept=".png,.jpg,.jpeg,.webp"
@@ -518,7 +580,7 @@ export function AdminPage() {
                       max={1800}
                       required
                     />
-                    <span className="muted">{grid}x{grid} puzzle</span>
+                    <span className="muted">{(roundGrids[round] || grid)}x{(roundGrids[round] || grid)} puzzle</span>
                   </div>
                 ))}
                 <div className="field">

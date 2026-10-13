@@ -27,9 +27,24 @@ router.post("/:eventId/upload/:round", upload.single("image"), (req, res) => {
     return res.status(400).json({ error: "Unsupported file type" });
   }
 
+  const customGrid = req.body?.grid ? Number(req.body.grid) : undefined;
   const dataUrl = `data:${req.file.mimetype};base64,${req.file.buffer.toString("base64")}`;
-  const config = tournament.setRoundImage(eventId, round, dataUrl);
+  const config = tournament.setRoundImage(eventId, round, dataUrl, customGrid);
   return res.json({ round, grid: config.grid, pieces: config.pieces.length });
+});
+
+router.patch("/:eventId/rounds/:round/grid", (req, res) => {
+  const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
+  const round = Number(req.params.round);
+  const grid = Number(req.body?.grid);
+  if (Number.isNaN(round) || round < 1 || round > TOURNAMENT_ROUNDS) {
+    return res.status(400).json({ error: "Invalid round" });
+  }
+  if (![2, 3, 4, 5, 6, 7, 8].includes(grid)) {
+    return res.status(400).json({ error: "Invalid grid size" });
+  }
+  const roundGrids = tournament.setRoundGrid(eventId, round, grid);
+  return res.json({ roundGrids });
 });
 
 router.delete("/:eventId/players/:playerId", (req, res) => {
