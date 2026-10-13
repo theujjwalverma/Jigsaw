@@ -1,4 +1,6 @@
-import { Navigate, Route, Routes } from "react-router-dom";
+import { Route, Routes } from "react-router-dom";
+import { HomePage } from "./pages/HomePage";
+import { LoginPage } from "./pages/LoginPage";
 import { AdminPage } from "./pages/AdminPage";
 import { GamePage } from "./pages/GamePage";
 import { JoinPage } from "./pages/JoinPage";
@@ -23,7 +25,8 @@ function App() {
         <span className="header-caption">Five rounds. One challenge.</span>
       </header>
     <Routes>
-      <Route path="/" element={<Navigate to="/admin" replace />} />
+      <Route path="/" element={<HomePage />} />
+      <Route path="/login" element={<LoginPage />} />
       <Route path="/admin" element={<AdminPage />} />
       <Route path="/join/:eventId" element={<JoinPage />} />
       <Route path="/lobby/:eventId" element={<LobbyPage />} />

@@ -845,3 +845,81 @@ a {
     scroll-behavior: auto !important;
   }
 }
+
+/* Home & Login Pages */
+.home-page,
+.login-page {
+  max-width: 680px;
+}
+
+.home-top-bar {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 8px;
+}
+
+.create-room-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--lavender);
+  color: #463765;
+  text-decoration: none;
+  font-weight: 700;
+  padding: 8px 16px;
+  border-radius: 14px;
+  font-size: 0.92rem;
+  box-shadow: 2px 3px 6px #8a74b322;
+  transition: transform 150ms ease, box-shadow 150ms ease;
+}
+
+.create-room-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 3px 5px 10px #8a74b333;
+}
+
+.code-entry-form,
+.login-form {
+  margin: 24px 0 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.code-input-wrapper,
+.login-input-wrapper {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+
+.room-code-input {
+  font-size: 1.4rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-align: center;
+  max-width: 240px;
+}
+
+.home-footer-card,
+.login-footer {
+  margin-top: 32px;
+  padding-top: 20px;
+  border-top: 1px solid var(--line);
+  font-size: 0.95rem;
+  color: var(--muted);
+}
+
+.accent-link {
+  color: #5d3eb2;
+  font-weight: 600;
+  text-decoration: none;
+}
+
+.accent-link:hover {
+  text-decoration: underline;
+}

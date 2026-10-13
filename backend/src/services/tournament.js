@@ -23,6 +23,15 @@ function roundDurations({ roundSecondsByRound, roundSeconds = DEFAULT_ROUND_SECO
   return roundSecondsByRound ? [...roundSecondsByRound] : Array(TOURNAMENT_ROUNDS).fill(roundSeconds);
 }
 
+function generateRoomCode() {
+  const digits = String(Math.floor(100000 + Math.random() * 900000));
+  return `${digits.slice(0, 3)}-${digits.slice(3)}`;
+}
+
+function normalizeCode(str) {
+  return String(str || "").replace(/[^0-9]/g, "");
+}
+
 class TournamentService {
   constructor() {
     this.events = new Map();
@@ -40,6 +49,7 @@ class TournamentService {
 
       this.events.set(snapshot.id, {
         ...snapshot,
+        code: snapshot.code || generateRoomCode(),
         roundSeconds: roundSecondsByRound[0],
         roundSecondsByRound,
         status: normalizedStatus,
@@ -54,6 +64,7 @@ class TournamentService {
   snapshot(event) {
     return {
       id: event.id,
+      code: event.code || generateRoomCode(),
       createdAt: event.createdAt,
       roundSeconds: event.roundSeconds,
       roundSecondsByRound: event.roundSecondsByRound,
@@ -79,6 +90,7 @@ class TournamentService {
     const roundSecondsByRound = roundDurations(settings);
     const event = {
       id: eventId,
+      code: generateRoomCode(),
       createdAt: new Date().toISOString(),
       roundSeconds: roundSecondsByRound[0],
       roundSecondsByRound,
@@ -99,6 +111,19 @@ class TournamentService {
 
   getEvent(eventId) {
     return this.events.get(eventId);
+  }
+
+  getEventByCode(rawCode) {
+    const clean = normalizeCode(rawCode);
+    for (const event of this.events.values()) {
+      if (clean && normalizeCode(event.code) === clean) {
+        return event;
+      }
+      if (event.id === rawCode) {
+        return event;
+      }
+    }
+    return null;
   }
 
   updateTimerSettings(eventId, settings) {

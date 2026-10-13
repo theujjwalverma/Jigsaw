@@ -17,10 +17,26 @@ router.post("/", (req, res) => {
   const event = tournament.createEvent(payload);
   res.status(201).json({
     id: event.id,
+    code: event.code,
     joinUrl: `/join/${event.id}`,
     roundSeconds: event.roundSeconds,
     roundSecondsByRound: event.roundSecondsByRound,
     leaderboardSeconds: event.leaderboardSeconds,
+  });
+});
+
+router.get("/lookup/:code", (req, res) => {
+  const code = String(req.params.code || "").trim();
+  const event = tournament.getEventByCode(code);
+  if (!event) {
+    return res.status(404).json({ error: "Tournament room not found" });
+  }
+  return res.json({
+    id: event.id,
+    code: event.code,
+    status: event.status,
+    currentRound: event.currentRound,
+    joinUrl: `/join/${event.id}`,
   });
 });
 
@@ -33,6 +49,7 @@ router.get("/:eventId", (req, res) => {
 
   return res.json({
     id: event.id,
+    code: event.code,
     status: event.status,
     currentRound: event.currentRound,
     playerCount: event.players.size,

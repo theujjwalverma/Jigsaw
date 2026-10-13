@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from "react";
+import { Link, useNavigate } from "react-router-dom";
 import { api, API_BASE } from "../services/api";
 import { socket } from "../services/socket";
 
@@ -7,8 +8,10 @@ const ROUND_CONFIG = [2, 3, 4, 5, 6].map((grid, index) => ({
 }));
 
 export function AdminPage() {
+  const navigate = useNavigate();
   const [activeEventId, setActiveEventId] = useState(() => typeof window === "undefined" ? "" : window.localStorage.getItem("jigsaw-admin-event") || "");
   const [eventIdInput, setEventIdInput] = useState(activeEventId);
+  const [eventCode, setEventCode] = useState("");
   const [password, setPassword] = useState("");
   const [message, setMessage] = useState("");
   const [roundSecondsByRound, setRoundSecondsByRound] = useState(() => ROUND_CONFIG.map(() => 300));
@@ -28,11 +31,12 @@ export function AdminPage() {
 
   const extractError = (error) => error?.response?.data?.error || error?.message || "Request failed";
 
-  const selectEvent = (id) => {
+  const selectEvent = (id, code = "") => {
     activeEventRef.current = id;
     timerEventRef.current = "";
     setActiveEventId(id);
     setEventIdInput(id);
+    setEventCode(code);
     setUploadMessages({});
     setUploadedRounds([]);
     setActiveRound(0);
@@ -45,15 +49,15 @@ export function AdminPage() {
     let cancelled = false;
     api.get("/auth/session").then(() => {
       if (!cancelled) setIsAuthed(true);
-    }).catch((error) => {
-      if (!cancelled && error.response?.status !== 401) {
-        setMessage(`Session check failed: ${extractError(error)}`);
+    }).catch(() => {
+      if (!cancelled) {
+        navigate("/login");
       }
     });
     return () => {
       cancelled = true;
     };
-  }, []);
+  }, [navigate]);
 
   const login = async () => {
     try {
@@ -72,7 +76,7 @@ export function AdminPage() {
         roundSecondsByRound: roundSecondsByRound.map(Number),
         leaderboardSeconds: Number(leaderboardSeconds),
       });
-      selectEvent(data.id);
+      selectEvent(data.id, data.code || "");
       setMessage("Event created");
     } catch (error) {
       setMessage(`Create event failed: ${extractError(error)}`);
@@ -167,6 +171,7 @@ export function AdminPage() {
 
       setPlayers(playersRes.data);
       setEventStatus(eventRes.data.status);
+      setEventCode(eventRes.data.code || "");
       setUploadedRounds(eventRes.data.uploadedRounds || []);
       setActiveRound(eventRes.data.currentRound || 0);
       if (timerEventRef.current !== requestedEventId) {
@@ -270,7 +275,10 @@ export function AdminPage() {
 
   return (
     <section className="page admin-page">
-      <p className="eyebrow">BEHIND THE PLAYGROUND</p>
+      <div className="admin-header-row" style={{ display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: "12px" }}>
+        <p className="eyebrow" style={{ margin: 0 }}>BEHIND THE PLAYGROUND</p>
+        <Link to="/" className="accent-link" style={{ fontWeight: "600" }}>&larr; Back to Home</Link>
+      </div>
       <h1>Admin Dashboard</h1>
       <p className="subtitle">Set the pace, gather your players, and let the puzzling begin.</p>
       <div className="clay-panel">
@@ -337,11 +345,22 @@ export function AdminPage() {
       <button type="button" onClick={endRound} disabled={!canControlRounds || eventStatus !== "in_round"}>End Round Now</button>
       <button type="button" onClick={advanceRound} disabled={!canAdvanceRound}>Advance Round</button>
       {message ? <p role="status" className={message.includes("failed:") ? "error" : "notice"}>{message}</p> : null}
-      <p>
-        {activeEventId
-          ? `Join URL: ${window.location.origin}/join/${activeEventId}`
-          : "Create an event to get a player join link"}
-      </p>
+      {activeEventId ? (
+        <div className="active-room-box" style={{ background: "#f5f0fc", padding: "16px 20px", borderRadius: "18px", margin: "14px 0" }}>
+          <p style={{ margin: "0 0 8px", fontSize: "1.05rem" }}>
+            <strong>Room Code: </strong>
+            <span className="badge badge-mint" style={{ fontSize: "1.2rem", padding: "6px 16px", fontWeight: "800", letterSpacing: "2px" }}>
+              {eventCode || "—"}
+            </span>
+          </p>
+          <p style={{ margin: 0 }}>
+            <strong>Join URL: </strong>
+            <code>{`${window.location.origin}/join/${activeEventId}`}</code>
+          </p>
+        </div>
+      ) : (
+        <p>Create an event to get a 6-digit room code and player join link</p>
+      )}
       <p>Controlling event: {activeEventId || "none"}</p>
       <p>Status: {eventStatus} | Current round: {activeRound || "-"}</p>
       <p>
