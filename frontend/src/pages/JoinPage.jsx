@@ -132,13 +132,6 @@ export function JoinPage() {
       ) : null}
 
       <div className="card-footer-action">
-        <p className="muted">Want to spectate live?</p>
-        <Link to={eventId ? `/live/${eventId}` : "/live"} className="create-room-btn">
-          Watch Live 🔴 &rarr;
-        </Link>
-      </div>
-
-      <div className="card-footer-action">
         <p className="muted">Hosting a tournament?</p>
         <Link to="/login" className="create-room-btn">
           Create Room &rarr;

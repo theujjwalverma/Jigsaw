@@ -4,6 +4,7 @@ import { useNavigate, useParams } from "react-router-dom";
 import { PieceTray } from "../components/PieceTray";
 import { PuzzleBoard } from "../components/PuzzleBoard";
 import { GameHud } from "../components/GameHud";
+import { LiveSpectatorFeed } from "../components/LiveSpectatorFeed";
 import { api } from "../services/api";
 import { useGameStore } from "../services/gameState";
 import { useImageAspectRatio } from "../hooks/useImageAspectRatio";
@@ -135,7 +136,17 @@ export function GamePage() {
       )}
 
       {completed ? (
-        <p className="celebration" role="status">Round submitted! Puzzle complete. Your leaderboard is up next.</p>
+        <div className="completed-live-wrapper">
+          <p className="celebration" role="status">
+            Round submitted! Puzzle complete. Your leaderboard is up next.
+          </p>
+          <LiveSpectatorFeed
+            eventId={eventId}
+            currentRound={currentRound}
+            puzzle={puzzle}
+            myPlayerId={playerId}
+          />
+        </div>
       ) : null}
     </section>
   );

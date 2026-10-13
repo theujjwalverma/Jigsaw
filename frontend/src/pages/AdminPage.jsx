@@ -344,6 +344,18 @@ export function AdminPage() {
       <button type="button" onClick={startGame} disabled={!canStartRoundOne}>Start Round 1</button>
       <button type="button" onClick={endRound} disabled={!canControlRounds || eventStatus !== "in_round"}>End Round Now</button>
       <button type="button" onClick={advanceRound} disabled={!canAdvanceRound}>Advance Round</button>
+      <button
+        type="button"
+        onClick={() => window.open(`/live/${activeEventId}`, "_blank")}
+        disabled={!activeEventId}
+        style={{
+          background: "#ff3b5c",
+          color: "#ffffff",
+          fontWeight: 700,
+        }}
+      >
+        Watch Live 🔴
+      </button>
       {message ? <p role="status" className={message.includes("failed:") ? "error" : "notice"}>{message}</p> : null}
       {activeEventId ? (
         <div className="active-room-box" style={{ background: "#f5f0fc", padding: "16px 20px", borderRadius: "18px", margin: "14px 0" }}>
@@ -357,12 +369,27 @@ export function AdminPage() {
             <strong>Join URL: </strong>
             <code>{`${window.location.origin}/join/${activeEventId}`}</code>
           </p>
-          <p style={{ margin: "8px 0 0" }}>
+          <div style={{ margin: "10px 0 0", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <strong>Spectate Live: </strong>
-            <a href={`/live/${activeEventId}`} target="_blank" rel="noreferrer" style={{ textDecoration: "underline", color: "var(--accent, #6a4c93)", fontWeight: 600 }}>
-              {`${window.location.origin}/live/${activeEventId}`} 🔴
-            </a>
-          </p>
+            <code>{`${window.location.origin}/live/${activeEventId}`}</code>
+            <button
+              type="button"
+              onClick={() => window.open(`/live/${activeEventId}`, "_blank")}
+              style={{
+                background: "#ff3b5c",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "6px 14px",
+                fontWeight: 700,
+                fontSize: "0.85rem",
+                cursor: "pointer",
+                boxShadow: "0 2px 8px rgba(255, 59, 92, 0.35)",
+              }}
+            >
+              Watch Live 🔴
+            </button>
+          </div>
         </div>
       ) : (
         <p>Create an event to get a 6-digit room code and player join link</p>
