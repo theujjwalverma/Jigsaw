@@ -9,6 +9,16 @@ export function LobbyPage() {
   const [players, setPlayers] = useState([]);
   const [roomCode, setRoomCode] = useState("");
   const [error, setError] = useState("");
+  const [copied, setCopied] = useState(false);
+
+  const copyJoinUrl = () => {
+    const rawDigits = roomCode.replace(/[^0-9]/g, "");
+    const code = rawDigits.length === 6 ? `${rawDigits.slice(0, 3)}-${rawDigits.slice(3)}` : (eventId || roomCode);
+    const url = `${window.location.origin}/join/${code}`;
+    navigator.clipboard.writeText(url);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
   const status = useGameStore((s) => s.eventStatus);
   const currentRound = useGameStore((s) => s.currentRound);
   const puzzle = useGameStore((s) => s.puzzle);
@@ -64,9 +74,31 @@ export function LobbyPage() {
       <h1>Lobby</h1>
 
       {roomCode ? (
-        <div className="lobby-room-code-badge">
-          <span className="room-code-label">ROOM CODE</span>
-          <strong className="room-code-number">{roomCode}</strong>
+        <div style={{ display: "flex", flexDirection: "column", alignItems: "center", gap: "8px", margin: "16px auto 20px" }}>
+          <div className="lobby-room-code-badge" style={{ margin: 0 }}>
+            <span className="room-code-label">ROOM CODE</span>
+            <strong className="room-code-number">{roomCode}</strong>
+          </div>
+          <button
+            type="button"
+            onClick={copyJoinUrl}
+            style={{
+              display: "inline-flex",
+              alignItems: "center",
+              gap: "6px",
+              padding: "6px 14px",
+              background: copied ? "#ddf6e6" : "#f0eaf8",
+              color: copied ? "#176d37" : "#5d3eb2",
+              border: "1px solid #d4c4ea",
+              borderRadius: "12px",
+              fontWeight: 700,
+              fontSize: "0.82rem",
+              cursor: "pointer",
+              transition: "all 0.15s ease",
+            }}
+          >
+            {copied ? "Join URL Copied! ✓" : "Copy Join URL 📋"}
+          </button>
         </div>
       ) : null}
 

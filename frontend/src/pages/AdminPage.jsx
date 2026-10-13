@@ -22,8 +22,18 @@ export function AdminPage() {
   const [activeRound, setActiveRound] = useState(0);
   const [isAuthed, setIsAuthed] = useState(false);
   const [uploadMessages, setUploadMessages] = useState({});
+  const [copiedJoinUrl, setCopiedJoinUrl] = useState(false);
   const activeEventRef = useRef(activeEventId);
   const timerEventRef = useRef("");
+
+  const copyJoinUrl = () => {
+    const code = eventCode || activeEventId;
+    if (!code) return;
+    const url = `${window.location.origin}/join/${code}`;
+    navigator.clipboard.writeText(url);
+    setCopiedJoinUrl(true);
+    setTimeout(() => setCopiedJoinUrl(false), 2000);
+  };
 
   useEffect(() => {
     activeEventRef.current = activeEventId;
@@ -365,10 +375,28 @@ export function AdminPage() {
               {eventCode || "—"}
             </span>
           </p>
-          <p style={{ margin: 0 }}>
+          <div style={{ margin: "4px 0 0", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <strong>Join URL: </strong>
             <code>{`${window.location.origin}/join/${eventCode || activeEventId}`}</code>
-          </p>
+            <button
+              type="button"
+              onClick={copyJoinUrl}
+              style={{
+                background: copiedJoinUrl ? "#2cc075" : "#6a4c93",
+                color: "#ffffff",
+                border: "none",
+                borderRadius: "10px",
+                padding: "5px 12px",
+                fontWeight: 700,
+                fontSize: "0.82rem",
+                cursor: "pointer",
+                boxShadow: "0 2px 6px rgba(106, 76, 147, 0.25)",
+                transition: "all 0.15s ease",
+              }}
+            >
+              {copiedJoinUrl ? "Copied! ✓" : "Copy Join URL 📋"}
+            </button>
+          </div>
           <div style={{ margin: "10px 0 0", display: "flex", alignItems: "center", gap: "10px", flexWrap: "wrap" }}>
             <strong>Spectate Live: </strong>
             <code>{`${window.location.origin}/live/${eventCode || activeEventId}`}</code>
