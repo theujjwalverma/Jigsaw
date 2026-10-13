@@ -2,11 +2,12 @@
   "name": "jigsaw-game",
   "version": "1.0.0",
   "description": "Live five-round online jigsaw puzzle tournament",
-  "main": "index.js",
+  "main": "backend/src/index.js",
   "directories": {
     "doc": "docs"
   },
   "scripts": {
+    "start": "npm --workspace backend start",
     "dev": "concurrently -n backend,frontend -c blue,green \"npm run dev:backend\" \"npm run dev:frontend\"",
     "dev:backend": "npm --workspace backend run dev",
     "dev:frontend": "npm --workspace frontend run dev",
