@@ -50,7 +50,8 @@ function scheduleAutoAdvance(app, eventId) {
       if (latest.status !== "between_rounds") return;
 
       const nextRound = latest.currentRound + 1;
-      if (nextRound > TOURNAMENT_ROUNDS) {
+      const maxRounds = latest.totalRounds || TOURNAMENT_ROUNDS;
+      if (nextRound > maxRounds) {
         const finalLeaderboard = tournament.getFinalLeaderboard(eventId);
         app.get("io").to(eventId).emit("game:tournament-end", finalLeaderboard);
         return;

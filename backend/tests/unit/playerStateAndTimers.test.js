@@ -347,7 +347,7 @@ describe("player state and timer settings", () => {
     expect(parseOrThrow(submissionSchema, { playerId: player.id, roundNumber: 1 }))
       .toEqual({ playerId: player.id, roundNumber: 1 });
     for (const invalid of [{}, { playerId: "invalid", roundNumber: 1 },
-      { playerId: player.id, roundNumber: 0 }, { playerId: player.id, roundNumber: 6 }]) {
+      { playerId: player.id, roundNumber: 0 }, { playerId: player.id, roundNumber: 11 }]) {
       expect(() => parseOrThrow(submissionSchema, invalid)).toThrow();
     }
   });
@@ -371,7 +371,7 @@ describe("player state and timer settings", () => {
     for (const invalid of [
       { ...payload, playerId: "invalid" }, { ...payload, pieceId: "__proto__" },
       { ...payload, cellId: undefined }, { ...payload, roundNumber: undefined },
-      { ...payload, roundNumber: 0 }, { ...payload, roundNumber: 6 },
+      { ...payload, roundNumber: 0 }, { ...payload, roundNumber: 11 },
     ]) {
       expect(() => parseOrThrow(placementSchema, invalid)).toThrow();
     }

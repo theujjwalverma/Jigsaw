@@ -3,9 +3,12 @@ import { Link, useNavigate } from "react-router-dom";
 import { api, API_BASE } from "../services/api";
 import { socket } from "../services/socket";
 
-const ROUND_CONFIG = [2, 3, 4, 5, 6].map((grid, index) => ({
-  round: index + 1, grid, recommendedSize: grid * 300,
-}));
+const DEFAULT_GRIDS = [2, 3, 4, 5, 6, 6, 7, 7, 8, 8];
+const ROUND_CONFIG = Array.from({ length: 10 }, (_, index) => {
+  const round = index + 1;
+  const grid = DEFAULT_GRIDS[index] || 6;
+  return { round, grid, recommendedSize: grid * 300 };
+});
 
 export function AdminPage() {
   let navigate;
@@ -30,8 +33,9 @@ export function AdminPage() {
   const [copiedJoinUrl, setCopiedJoinUrl] = useState(false);
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [isTimersOpen, setIsTimersOpen] = useState(false);
-  const [roundGrids, setRoundGrids] = useState(() => ({ 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 }));
+  const [roundGrids, setRoundGrids] = useState(() => ({ 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 6, 7: 7, 8: 7, 9: 8, 10: 8 }));
   const [previewUrls, setPreviewUrls] = useState({});
+  const [totalRounds, setTotalRounds] = useState(5);
   const activeEventRef = useRef(activeEventId);
   const timerEventRef = useRef("");
 
@@ -67,10 +71,12 @@ export function AdminPage() {
 
   const createEvent = async () => {
     try {
-      const { data } = await api.post("/events", {
-        roundSecondsByRound: roundSecondsByRound.map(Number),
+      const payload = {
+        totalRounds: Number(totalRounds),
+        roundSecondsByRound: roundSecondsByRound.slice(0, totalRounds).map(Number),
         leaderboardSeconds: Number(leaderboardSeconds),
-      });
+      };
+      const { data } = await api.post("/events", payload);
       selectEvent(data.id, data.code || "");
       setMessage("New room created");
     } catch (error) {
@@ -131,12 +137,20 @@ export function AdminPage() {
     e.preventDefault();
     const requestedEventId = activeEventId;
     try {
-      const { data } = await api.patch(`/events/${requestedEventId}/settings`, {
-        roundSecondsByRound: roundSecondsByRound.map(Number),
+      const numRounds = Number(totalRounds) || 5;
+      const durations = [...roundSecondsByRound];
+      while (durations.length < numRounds) {
+        durations.push(180);
+      }
+      const payload = {
+        totalRounds: numRounds,
+        roundSecondsByRound: durations.slice(0, numRounds).map(Number),
         leaderboardSeconds: Number(leaderboardSeconds),
-      });
+      };
+      const { data } = await api.patch(`/events/${requestedEventId}/settings`, payload);
       if (activeEventRef.current !== requestedEventId) return;
       setRoundSecondsByRound(data.roundSecondsByRound);
+      if (data.totalRounds) setTotalRounds(data.totalRounds);
       setLeaderboardSeconds(data.leaderboardSeconds);
       timerEventRef.current = requestedEventId;
       setMessage("Timer settings saved for future rounds. The running countdown is unchanged.");
@@ -199,12 +213,16 @@ export function AdminPage() {
       setPlayers(playersRes.data);
       setEventStatus(eventRes.data.status);
       setEventCode(eventRes.data.code || "");
+      if (eventRes.data.totalRounds) {
+        setTotalRounds(eventRes.data.totalRounds);
+      }
       setUploadedRounds(eventRes.data.uploadedRounds || []);
       setActiveRound(eventRes.data.currentRound || 0);
       if (timerEventRef.current !== requestedEventId) {
         timerEventRef.current = requestedEventId;
+        const count = eventRes.data.totalRounds || (eventRes.data.roundSecondsByRound?.length) || 5;
         setRoundSecondsByRound(eventRes.data.roundSecondsByRound ||
-          ROUND_CONFIG.map(() => eventRes.data.roundSeconds));
+          Array(count).fill(eventRes.data.roundSeconds || 300));
         setLeaderboardSeconds(eventRes.data.leaderboardSeconds);
       }
       if (eventRes.data.roundGrids) {
@@ -300,13 +318,13 @@ export function AdminPage() {
   }, [activeEventId]);
 
   const hasRoundOneImage = uploadedRounds.includes(1);
-  const hasAllRoundImages = uploadedRounds.length === 5;
+  const hasAllRoundImages = uploadedRounds.length >= totalRounds;
   const canControlRounds = isAuthed && Boolean(activeEventId);
   const canStartRoundOne = canControlRounds && eventStatus === "lobby" && activeRound === 0 && hasRoundOneImage;
   const nextRound = activeRound > 0 ? activeRound + 1 : 1;
   const hasNextRoundImage = uploadedRounds.includes(nextRound);
   const canAdvanceRound =
-    canControlRounds && eventStatus === "between_rounds" && activeRound > 0 && activeRound < 5 && hasNextRoundImage;
+    canControlRounds && eventStatus === "between_rounds" && activeRound > 0 && activeRound < totalRounds && hasNextRoundImage;
 
   return (
     <section className="page admin-page">
@@ -430,11 +448,11 @@ export function AdminPage() {
                 <span className="admin-tile-label">🖼️ Image Setup</span>
                 <div className="admin-tile-value">
                   <span className={`badge ${hasAllRoundImages ? "badge-mint" : hasRoundOneImage ? "badge-neutral" : "badge-amber"}`}>
-                    {uploadedRounds.length} / 5 Ready
+                    {uploadedRounds.length} / {totalRounds} Ready
                   </span>
                 </div>
                 <span className="admin-tile-detail">
-                  Round 1: <strong>{hasRoundOneImage ? "Uploaded ✓" : "Missing ✕"}</strong> • {hasAllRoundImages ? "All 5 ready" : "Incomplete"}
+                  Round 1: <strong>{hasRoundOneImage ? "Uploaded ✓" : "Missing ✕"}</strong> • {hasAllRoundImages ? `All ${totalRounds} ready` : "Incomplete"}
                 </span>
               </div>
 
@@ -454,97 +472,12 @@ export function AdminPage() {
             {!canStartRoundOne && activeRound === 0 ? (
               <p className="error" style={{ fontSize: "0.85rem" }}>To start: log in, create or open an event, and successfully upload the Round 1 image.</p>
             ) : null}
-            {!canAdvanceRound && activeRound > 0 && activeRound < 5 ? (
+            {!canAdvanceRound && activeRound > 0 && activeRound < totalRounds ? (
               <p className="muted" style={{ fontSize: "0.85rem" }}>Advance is enabled only after next round image upload.</p>
             ) : null}
           </div>
 
-          {/* 2. Round Settings Card */}
-          <div className="clay-panel">
-            <h2>Round Settings</h2>
-            <p className="muted">Selecting a file is not confirmation of upload. Wait for "Upload complete" and the round to show "uploaded".</p>
-            <p id="image-guidance" className="muted">Aim for about 300 pixels per piece. Landscape and portrait images keep their original proportions; square sizes below are recommendations, not requirements. PNG, JPEG or WebP; up to 5 MB per image. JPEG or WebP works well for large photos.</p>
-            <div className="upload-grid">
-              {ROUND_CONFIG.map(({ round, grid }) => {
-                const currentGrid = roundGrids[round] || grid;
-                const recSize = currentGrid * 300;
-                const isUploaded = uploadedRounds.includes(round);
-                const previewSrc = previewUrls[round] || (isUploaded && activeEventId ? `${API_BASE || ""}/api/events/${activeEventId}/rounds/${round}/image` : null);
-
-                return (
-                  <div key={round} className="upload-card">
-                    <div className="round-card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
-                      <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
-                        <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Round {round}</span>
-                        <select
-                          className="clay-select"
-                          aria-label={`Round ${round} pieces`}
-                          value={currentGrid}
-                          onChange={async (e) => {
-                            const newGrid = Number(e.target.value);
-                            setRoundGrids((prev) => ({ ...prev, [round]: newGrid }));
-                            if (activeEventId && isAuthed) {
-                              try {
-                                await api.patch(`/events/${activeEventId}/rounds/${round}/grid`, { grid: newGrid });
-                              } catch {
-                                // non-blocking
-                              }
-                            }
-                          }}
-                        >
-                          <option value={2}>2x2 (4 pieces)</option>
-                          <option value={3}>3x3 (9 pieces)</option>
-                          <option value={4}>4x4 (16 pieces)</option>
-                          <option value={5}>5x5 (25 pieces)</option>
-                          <option value={6}>6x6 (36 pieces)</option>
-                          <option value={7}>7x7 (49 pieces)</option>
-                          <option value={8}>8x8 (64 pieces)</option>
-                        </select>
-                      </div>
-                      <span className={`badge ${isUploaded ? "badge-mint" : "badge-neutral"}`} style={{ fontSize: "0.75rem" }}>
-                        {isUploaded ? "uploaded" : "missing"}
-                      </span>
-                    </div>
-
-                    {previewSrc ? (
-                      <div className="round-image-preview-wrap">
-                        <img
-                          src={previewSrc}
-                          alt={`Round ${round} preview`}
-                          className="round-image-preview"
-                          onError={(e) => {
-                            e.currentTarget.style.display = "none";
-                          }}
-                        />
-                        <span className="round-preview-badge">✓ Preview</span>
-                      </div>
-                    ) : null}
-
-                    <p id={`round-${round}-image-size`} className="muted">Recommended square size: {recSize} x {recSize} px</p>
-                    <input
-                      type="file"
-                      accept=".png,.jpg,.jpeg,.webp"
-                      aria-label={`Round ${round} image`}
-                      aria-describedby={`image-guidance round-${round}-image-size`}
-                      disabled={!canControlRounds || uploadMessages[round] === "Uploading..."}
-                      onChange={async (e) => {
-                        const input = e.target;
-                        await uploadRound(round, input.files?.[0]);
-                        input.value = "";
-                      }}
-                    />
-                    {uploadMessages[round] ? (
-                      <p role="status" className={uploadMessages[round].startsWith("Upload failed:") ? "error" : ""}>
-                        {uploadMessages[round]}
-                      </p>
-                    ) : null}
-                  </div>
-                );
-              })}
-            </div>
-          </div>
-
-          {/* 3. Timer Settings Accordion */}
+          {/* 2. Game Settings Accordion */}
           <div className="clay-panel accordion-panel">
             <button
               type="button"
@@ -553,10 +486,10 @@ export function AdminPage() {
               aria-expanded={isTimersOpen}
             >
               <div className="accordion-title-wrap">
-                <span className="accordion-icon">⏱️</span>
-                <h2>Timer Settings</h2>
+                <span className="accordion-icon">⚙️</span>
+                <h2>Game Settings</h2>
                 <span className="badge badge-neutral" style={{ fontSize: "0.85rem" }}>
-                  {leaderboardSeconds}s Pause • 5 Rounds
+                  {leaderboardSeconds}s Pause • {totalRounds} Rounds
                 </span>
               </div>
               <span className={`accordion-chevron ${isTimersOpen ? "open" : ""}`}>
@@ -567,38 +500,210 @@ export function AdminPage() {
             </button>
             <div className="accordion-body" style={{ display: isTimersOpen ? "block" : "none" }}>
               <form onSubmit={saveTimers} className="settings-form">
-                {ROUND_CONFIG.map(({ round, grid }, index) => (
-                  <div className="field" key={round}>
-                    <label htmlFor={`round-${round}-seconds`}>Round {round} duration (seconds, 60-1800)</label>
+                <div className="field">
+                  <label htmlFor="total-rounds">How many rounds (max 10 rounds)</label>
+                  <div className="slider-field-row">
                     <input
-                      id={`round-${round}-seconds`}
+                      type="range"
+                      className="clay-range"
+                      min={1}
+                      max={10}
+                      value={Number(totalRounds) || 1}
+                      onChange={(e) => {
+                        const val = Number(e.target.value);
+                        setTotalRounds(val);
+                        setRoundSecondsByRound((current) => {
+                          const updated = [...current];
+                          while (updated.length < val) {
+                            updated.push(180);
+                          }
+                          return updated.slice(0, val);
+                        });
+                      }}
+                      aria-label="How many rounds slider"
+                    />
+                    <input
+                      id="total-rounds"
                       type="number"
-                      value={roundSecondsByRound[index]}
-                      onChange={(e) => setRoundSecondsByRound((current) =>
-                        current.map((value, i) => i === index ? e.target.value : value))}
-                      min={60}
-                      max={1800}
+                      style={{ width: "20%", minWidth: "65px" }}
+                      value={totalRounds}
+                      onChange={(e) => {
+                        const raw = e.target.value;
+                        const val = Number(raw);
+                        setTotalRounds(raw === "" ? "" : Math.max(1, Math.min(10, val)));
+                        if (val >= 1 && val <= 10) {
+                          setRoundSecondsByRound((current) => {
+                            const updated = [...current];
+                            while (updated.length < val) {
+                              updated.push(180);
+                            }
+                            return updated.slice(0, val);
+                          });
+                        }
+                      }}
+                      min={1}
+                      max={10}
                       required
                     />
-                    <span className="muted">{(roundGrids[round] || grid)}x{(roundGrids[round] || grid)} puzzle</span>
                   </div>
-                ))}
+                </div>
+
                 <div className="field">
                   <label htmlFor="leaderboard-seconds">Leaderboard pause (seconds, 5-120)</label>
-                  <input
-                    id="leaderboard-seconds"
-                    type="number"
-                    value={leaderboardSeconds}
-                    onChange={(e) => setLeaderboardSeconds(e.target.value)}
-                    min={5}
-                    max={120}
-                    required
-                    placeholder="Leaderboard seconds"
-                  />
+                  <div className="slider-field-row">
+                    <input
+                      type="range"
+                      className="clay-range"
+                      min={5}
+                      max={120}
+                      value={Number(leaderboardSeconds) || 5}
+                      onChange={(e) => setLeaderboardSeconds(Number(e.target.value))}
+                      aria-label="Leaderboard pause slider"
+                    />
+                    <input
+                      id="leaderboard-seconds"
+                      type="number"
+                      style={{ width: "20%", minWidth: "65px" }}
+                      value={leaderboardSeconds}
+                      onChange={(e) => setLeaderboardSeconds(e.target.value)}
+                      min={5}
+                      max={120}
+                      required
+                      placeholder="Leaderboard seconds"
+                    />
+                  </div>
                 </div>
-                <button type="submit" disabled={!isAuthed || !activeEventId}>Save Timer Settings</button>
-                <p>Each round uses its saved duration when it next starts. Running countdowns and already scheduled leaderboard pauses stay unchanged. Create Event uses the values above.</p>
+
+                <button type="submit" disabled={!isAuthed || !activeEventId}>Save Game Settings</button>
+                <p>Each round uses its saved duration when it next starts. Running countdowns and already scheduled leaderboard pauses stay unchanged. Settings above apply when saved.</p>
               </form>
+            </div>
+          </div>
+
+          {/* 3. Round Settings Card */}
+          <div className="clay-panel">
+            <h2>Round Settings</h2>
+            <p className="muted">Selecting a file is not confirmation of upload. Wait for "Upload complete" and the round to show "uploaded".</p>
+            <p id="image-guidance" className="muted">Aim for about 300 pixels per piece. Landscape and portrait images keep their original proportions; square sizes below are recommendations, not requirements. PNG, JPEG or WebP; up to 5 MB per image. JPEG or WebP works well for large photos.</p>
+            <div className="upload-grid">
+              {ROUND_CONFIG.slice(0, totalRounds).map(({ round, grid }, index) => {
+                const currentGrid = roundGrids[round] || grid;
+                const recSize = currentGrid * 300;
+                const isUploaded = uploadedRounds.includes(round);
+                const previewSrc = previewUrls[round] || (isUploaded && activeEventId ? `${API_BASE || ""}/api/events/${activeEventId}/rounds/${round}/image` : null);
+
+                return (
+                  <div key={round} className="upload-card">
+                    <div className="upload-card-body">
+                      {/* Left side: fields, pieces, duration */}
+                      <div className="upload-card-left">
+                        <div className="round-card-header" style={{ display: "flex", alignItems: "center", justifyContent: "space-between", flexWrap: "wrap", gap: "8px", marginBottom: "8px" }}>
+                          <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                            <span style={{ fontWeight: 700, fontSize: "0.95rem" }}>Round {round}</span>
+                            <select
+                              className="clay-select"
+                              aria-label={`Round ${round} pieces`}
+                              value={currentGrid}
+                              onChange={async (e) => {
+                                const newGrid = Number(e.target.value);
+                                setRoundGrids((prev) => ({ ...prev, [round]: newGrid }));
+                                if (activeEventId && isAuthed) {
+                                  try {
+                                    await api.patch(`/events/${activeEventId}/rounds/${round}/grid`, { grid: newGrid });
+                                  } catch {
+                                    // non-blocking
+                                  }
+                                }
+                              }}
+                            >
+                              <option value={2}>2x2 (4 pieces)</option>
+                              <option value={3}>3x3 (9 pieces)</option>
+                              <option value={4}>4x4 (16 pieces)</option>
+                              <option value={5}>5x5 (25 pieces)</option>
+                              <option value={6}>6x6 (36 pieces)</option>
+                              <option value={7}>7x7 (49 pieces)</option>
+                              <option value={8}>8x8 (64 pieces)</option>
+                            </select>
+                          </div>
+                          <span className={`badge ${isUploaded ? "badge-mint" : "badge-neutral"}`} style={{ fontSize: "0.75rem" }}>
+                            {isUploaded ? "uploaded" : "missing"}
+                          </span>
+                        </div>
+
+                        <div className="round-duration-row">
+                          <label htmlFor={`round-${round}-seconds`}>Round {round} duration (seconds, 60-1800)</label>
+                          <input
+                            id={`round-${round}-seconds`}
+                            type="number"
+                            value={roundSecondsByRound[index] ?? 180}
+                            onChange={(e) =>
+                              setRoundSecondsByRound((current) => {
+                                const updated = [...current];
+                                while (updated.length <= index) {
+                                  updated.push(180);
+                                }
+                                updated[index] = e.target.value;
+                                return updated;
+                              })
+                            }
+                            min={60}
+                            max={1800}
+                            required
+                            aria-label={`Round ${round} duration (seconds)`}
+                          />
+                        </div>
+
+                        <p id={`round-${round}-image-size`} className="muted">Recommended square size: {recSize} x {recSize} px</p>
+                        <input
+                          type="file"
+                          accept=".png,.jpg,.jpeg,.webp"
+                          aria-label={`Round ${round} image`}
+                          aria-describedby={`image-guidance round-${round}-image-size`}
+                          disabled={!canControlRounds || uploadMessages[round] === "Uploading..."}
+                          onChange={async (e) => {
+                            const input = e.target;
+                            await uploadRound(round, input.files?.[0]);
+                            input.value = "";
+                          }}
+                        />
+                        {uploadMessages[round] ? (
+                          <p role="status" className={uploadMessages[round].startsWith("Upload failed:") ? "error" : ""}>
+                            {uploadMessages[round]}
+                          </p>
+                        ) : null}
+                      </div>
+
+                      {/* Right side: image preview */}
+                      <div className="upload-card-right">
+                        {previewSrc ? (
+                          <div className="round-image-preview-wrap">
+                            <img
+                              src={previewSrc}
+                              alt={`Round ${round} preview`}
+                              className="round-image-preview"
+                              onError={(e) => {
+                                e.currentTarget.style.display = "none";
+                              }}
+                            />
+                            <span className="round-preview-badge">✓ Preview</span>
+                          </div>
+                        ) : (
+                          <div className="round-image-preview-wrap round-image-placeholder">
+                            <div className="preview-placeholder-content">
+                              <svg viewBox="0 0 24 24" width="28" height="28" stroke="currentColor" strokeWidth="1.8" fill="none" strokeLinecap="round" strokeLinejoin="round" style={{ opacity: 0.45 }}>
+                                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+                                <circle cx="8.5" cy="8.5" r="1.5"/>
+                                <polyline points="21 15 16 10 5 21"/>
+                              </svg>
+                              <span style={{ fontSize: "0.78rem", color: "var(--muted, #69637c)", fontWeight: 600 }}>No image uploaded</span>
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    </div>
+                  </div>
+                );
+              })}
             </div>
           </div>
         </div>

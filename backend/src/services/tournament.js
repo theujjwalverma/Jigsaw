@@ -19,8 +19,11 @@ function roundProgress(state) {
   };
 }
 
-function roundDurations({ roundSecondsByRound, roundSeconds = DEFAULT_ROUND_SECONDS }) {
-  return roundSecondsByRound ? [...roundSecondsByRound] : Array(TOURNAMENT_ROUNDS).fill(roundSeconds);
+function roundDurations({ roundSecondsByRound, roundSeconds = DEFAULT_ROUND_SECONDS, totalRounds = 5 }) {
+  if (roundSecondsByRound && roundSecondsByRound.length > 0) {
+    return [...roundSecondsByRound];
+  }
+  return Array(Number(totalRounds) || 5).fill(roundSeconds);
 }
 
 function generateRoomCode() {
@@ -42,7 +45,8 @@ class TournamentService {
     const snapshots = loadEventSnapshots();
     snapshots.forEach((snapshot) => {
       const normalizedStatus = snapshot.status === "in_round" ? "between_rounds" : snapshot.status;
-      const roundSecondsByRound = roundDurations(snapshot);
+      const totalRounds = snapshot.totalRounds || (snapshot.roundSecondsByRound ? snapshot.roundSecondsByRound.length : 5);
+      const roundSecondsByRound = roundDurations({ ...snapshot, totalRounds });
       const players = new Map(
         snapshot.players.map((player) => [player.id, { ...player, socketId: null }]),
       );
@@ -50,9 +54,10 @@ class TournamentService {
       this.events.set(snapshot.id, {
         ...snapshot,
         code: snapshot.code || generateRoomCode(),
+        totalRounds,
         roundSeconds: roundSecondsByRound[0],
         roundSecondsByRound,
-        roundGrids: snapshot.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
+        roundGrids: snapshot.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 6, 7: 7, 8: 7, 9: 8, 10: 8 },
         status: normalizedStatus,
         players,
         timer: null,
@@ -67,9 +72,10 @@ class TournamentService {
       id: event.id,
       code: event.code || generateRoomCode(),
       createdAt: event.createdAt,
+      totalRounds: event.totalRounds || (event.roundSecondsByRound ? event.roundSecondsByRound.length : 5),
       roundSeconds: event.roundSeconds,
       roundSecondsByRound: event.roundSecondsByRound,
-      roundGrids: event.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
+      roundGrids: event.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 6, 7: 7, 8: 7, 9: 8, 10: 8 },
       leaderboardSeconds: event.leaderboardSeconds,
       status: event.status,
       currentRound: event.currentRound,
@@ -89,14 +95,16 @@ class TournamentService {
 
   createEvent(settings) {
     const eventId = randomUUID();
-    const roundSecondsByRound = roundDurations(settings);
+    const totalRounds = Number(settings.totalRounds) || (settings.roundSecondsByRound ? settings.roundSecondsByRound.length : 5);
+    const roundSecondsByRound = roundDurations({ ...settings, totalRounds });
     const event = {
       id: eventId,
       code: generateRoomCode(),
       createdAt: new Date().toISOString(),
+      totalRounds,
       roundSeconds: roundSecondsByRound[0],
       roundSecondsByRound,
-      roundGrids: { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
+      roundGrids: { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6, 6: 6, 7: 7, 8: 7, 9: 8, 10: 8 },
       leaderboardSeconds: settings.leaderboardSeconds,
       status: "lobby",
       currentRound: 0,
@@ -132,15 +140,33 @@ class TournamentService {
 
   updateTimerSettings(eventId, settings) {
     const event = this.ensureEvent(eventId);
-    event.roundSecondsByRound = roundDurations(settings);
-    event.roundSeconds = event.roundSecondsByRound[0];
-    event.leaderboardSeconds = settings.leaderboardSeconds;
+    if (settings.totalRounds) {
+      event.totalRounds = Number(settings.totalRounds);
+    }
+    const currentTotalRounds = event.totalRounds || 5;
+    if (settings.roundSecondsByRound) {
+      event.roundSecondsByRound = [...settings.roundSecondsByRound];
+    } else if (settings.roundSeconds !== undefined) {
+      event.roundSecondsByRound = Array(currentTotalRounds).fill(settings.roundSeconds);
+    } else if (event.roundSecondsByRound.length !== currentTotalRounds) {
+      event.roundSecondsByRound = roundDurations({
+        roundSecondsByRound: event.roundSecondsByRound.slice(0, currentTotalRounds),
+        roundSeconds: event.roundSeconds || DEFAULT_ROUND_SECONDS,
+        totalRounds: currentTotalRounds,
+      });
+    }
+    event.roundSeconds = event.roundSecondsByRound[0] || event.roundSeconds;
+    event.leaderboardSeconds = settings.leaderboardSeconds !== undefined ? settings.leaderboardSeconds : event.leaderboardSeconds;
     this.persist(event);
-    return {
+    const result = {
       roundSeconds: event.roundSeconds,
       roundSecondsByRound: event.roundSecondsByRound,
       leaderboardSeconds: event.leaderboardSeconds,
     };
+    if (settings.totalRounds) {
+      result.totalRounds = event.totalRounds;
+    }
+    return result;
   }
 
   getPlayerState(eventId, playerId) {
@@ -396,7 +422,8 @@ class TournamentService {
     });
 
     event.roundResults[round] = ranked;
-    event.status = round >= TOURNAMENT_ROUNDS ? "finished" : "between_rounds";
+    const maxRounds = event.totalRounds || TOURNAMENT_ROUNDS;
+    event.status = round >= maxRounds ? "finished" : "between_rounds";
     event.roundEndsAt = null;
     event.timer = null;
     event.advanceTimer = null;

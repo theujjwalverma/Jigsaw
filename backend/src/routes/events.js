@@ -21,6 +21,7 @@ router.post("/", (req, res) => {
     joinUrl: `/join/${event.code}`,
     roundSeconds: event.roundSeconds,
     roundSecondsByRound: event.roundSecondsByRound,
+    totalRounds: event.totalRounds || 5,
     leaderboardSeconds: event.leaderboardSeconds,
   });
 });
@@ -56,6 +57,7 @@ router.get("/:eventId", (req, res) => {
     playerCount: event.players.size,
     roundSeconds: event.roundSeconds,
     roundSecondsByRound: event.roundSecondsByRound,
+    totalRounds: event.totalRounds || 5,
     leaderboardSeconds: event.leaderboardSeconds,
     uploadedRounds: Object.keys(event.roundAssets).map((value) => Number(value)),
     roundGrids: event.roundGrids || { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },

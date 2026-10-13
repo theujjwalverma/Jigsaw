@@ -11,7 +11,7 @@ it("explains the login prerequisite and prevents unauthenticated image selection
   expect(html).toContain("Selecting a file is not confirmation of upload");
   expect(html).not.toContain("Lock Event");
   expect(html).not.toContain("Unlock");
-  expect(html).toContain("Save Timer Settings");
+  expect(html).toContain("Save Game Settings");
   for (let round = 1; round <= 5; round++) {
     expect(html).toContain(`Round ${round} duration (seconds, 60-1800)`);
     expect(html).toContain(`Recommended square size: ${(round + 1) * 300} x ${(round + 1) * 300} px`);

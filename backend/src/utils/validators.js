@@ -19,29 +19,53 @@ const joinSchema = z.object({
   name: playerNameSchema,
 });
 
+const totalRoundsSchema = z.number().int().min(1).max(10);
 const roundDurationSchema = z.number().int().min(60).max(1800);
-const roundSecondsByRoundSchema = z.array(roundDurationSchema).length(TOURNAMENT_ROUNDS);
 const leaderboardDurationSchema = z.number().int().min(5).max(120);
 
 const createEventSchema = z.object({
+  totalRounds: totalRoundsSchema.default(5),
   roundSeconds: roundDurationSchema.default(DEFAULT_ROUND_SECONDS),
-  roundSecondsByRound: roundSecondsByRoundSchema.optional(),
+  roundSecondsByRound: z.array(roundDurationSchema).optional(),
   leaderboardSeconds: leaderboardDurationSchema.default(DEFAULT_LEADERBOARD_SECONDS),
+}).superRefine((data, ctx) => {
+  if (data.roundSecondsByRound) {
+    const expected = data.totalRounds || 5;
+    if (data.roundSecondsByRound.length !== expected) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `roundSecondsByRound must contain exactly ${expected} durations`,
+        path: ["roundSecondsByRound"],
+      });
+    }
+  }
 });
 
 const timerSettingsSchema = z.object({
+  totalRounds: totalRoundsSchema.optional(),
   roundSeconds: roundDurationSchema.optional(),
-  roundSecondsByRound: roundSecondsByRoundSchema.optional(),
+  roundSecondsByRound: z.array(roundDurationSchema).optional(),
   leaderboardSeconds: leaderboardDurationSchema,
 }).refine((settings) => settings.roundSeconds !== undefined || settings.roundSecondsByRound !== undefined, {
-  message: "Provide durations for all five rounds or a shared round duration.",
+  message: "Provide durations for all rounds or a shared round duration.",
   path: ["roundSecondsByRound"],
+}).superRefine((data, ctx) => {
+  if (data.roundSecondsByRound) {
+    const expected = data.totalRounds || 5;
+    if (data.roundSecondsByRound.length !== expected) {
+      ctx.addIssue({
+        code: z.ZodIssueCode.custom,
+        message: `roundSecondsByRound must contain exactly ${expected} durations`,
+        path: ["roundSecondsByRound"],
+      });
+    }
+  }
 });
 
 const pieceIdSchema = z.string().regex(/^r\d+c\d+$/).max(20);
 const submissionSchema = z.object({
   playerId: uuidSchema,
-  roundNumber: z.number().int().min(1).max(5),
+  roundNumber: z.number().int().min(1).max(10),
 });
 const placementSchema = submissionSchema.extend({
   pieceId: pieceIdSchema,

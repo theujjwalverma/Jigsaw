@@ -14,7 +14,7 @@ const upload = multer({
 router.post("/:eventId/upload/:round", upload.single("image"), (req, res) => {
   const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
   const round = Number(req.params.round);
-  if (Number.isNaN(round) || round < 1 || round > TOURNAMENT_ROUNDS) {
+  if (Number.isNaN(round) || round < 1 || round > 10) {
     return res.status(400).json({ error: "Invalid round" });
   }
 
@@ -37,7 +37,7 @@ router.patch("/:eventId/rounds/:round/grid", (req, res) => {
   const eventId = parseOrThrow(eventIdSchema, req.params.eventId);
   const round = Number(req.params.round);
   const grid = Number(req.body?.grid);
-  if (Number.isNaN(round) || round < 1 || round > TOURNAMENT_ROUNDS) {
+  if (Number.isNaN(round) || round < 1 || round > 10) {
     return res.status(400).json({ error: "Invalid round" });
   }
   if (![2, 3, 4, 5, 6, 7, 8].includes(grid)) {

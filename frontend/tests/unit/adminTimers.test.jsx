@@ -42,6 +42,7 @@ function render(overrides = {}) {
     uploadedRounds: [1, 2], activeRound: 0, isAuthed: true, uploadMessages: {}, copiedJoinUrl: false, showResetConfirm: false, isTimersOpen: false,
     roundGrids: { 1: 2, 2: 3, 3: 4, 4: 5, 5: 6 },
     previewUrls: {},
+    totalRounds: 5,
     ...overrides,
   };
   setters = {};
@@ -84,7 +85,7 @@ it("edits one round without altering other durations", () => {
 it("creates an event using all five entered durations", async () => {
   const page = render({ roundSecondsByRound: times.map(String), leaderboardSeconds: "10" });
   await button(page, "Create Event").props.onClick();
-  expect(api.post).toHaveBeenCalledWith("/events", { roundSecondsByRound: times, leaderboardSeconds: 10 });
+  expect(api.post).toHaveBeenCalledWith("/events", { totalRounds: 5, roundSecondsByRound: times, leaderboardSeconds: 10 });
   expect(window.localStorage.setItem).toHaveBeenCalledWith("jigsaw-admin-event", "created-event");
 });
 
@@ -93,7 +94,7 @@ it("saves the full list and explains that running countdowns are unchanged", asy
   const preventDefault = vi.fn();
   await findElement(page, "form").props.onSubmit({ preventDefault });
   expect(preventDefault).toHaveBeenCalled();
-  expect(api.patch).toHaveBeenCalledWith("/events/event/settings", { roundSecondsByRound: times, leaderboardSeconds: 10 });
+  expect(api.patch).toHaveBeenCalledWith("/events/event/settings", { totalRounds: 5, roundSecondsByRound: times, leaderboardSeconds: 10 });
   expect(setters.roundSecondsByRound).toHaveBeenCalledWith(times);
   expect(setters.message).toHaveBeenCalledWith(expect.stringContaining("running countdown is unchanged"));
 });
